@@ -6,7 +6,7 @@ import random
 import time
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard, TabooMove
 import competitive_sudoku.sudokuai
-
+import datetime
 
 class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
     """
@@ -23,19 +23,17 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         def possible(i, j, value):
             not_taboo = game_state.board.get(i, j) == SudokuBoard.empty \
                         and not TabooMove(i, j, value) in game_state.taboo_moves
-            # print(i, j, value, not_taboo)
-            values = []
-            for z in range(N):
-                values.append(game_state.board.get(i, z))
-                # print(game_state.board.get(move.i, z))
-            for z in range(N):
-                values.append(game_state.board.get(z, j))
-            valid_move = (game_state.board.get(i, j) == SudokuBoard.empty and value not in values)
 
-            return (not_taboo and valid_move), values
+            if not not_taboo:
+                return False
+
+            values = get_surrounding_values(i, j, game_state)
+            
+            return value not in values
+            
 
         all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in range(1, N+1)
-                     if possible(i, j, value)[0]]
+                     if possible(i, j, value)]
 
         def score_move(moves):
             scores = []
@@ -66,3 +64,19 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             time.sleep(0.2)
             self.propose_move(random.choice(all_moves))
 
+def get_surrounding_values(i,j, game_state: GameState):
+    N = game_state.board.N
+    values = []
+
+    # get values in row
+    values.extend([game_state.board.get(i, z) for z in range(N) if game_state.board.get(i, z) != SudokuBoard.empty])
+    
+    # get values in column
+    values.extend([game_state.board.get(z, j) for z in range(N) if game_state.board.get(i, z) != SudokuBoard.empty])
+    
+    # get values in block
+    i_start = int(i/game_state.board.n)*game_state.board.n
+    j_start = int(j/game_state.board.n)*game_state.board.n
+    values.extend([game_state.board.get(x, y) for x in range(i_start, i_start+game_state.board.n) for y in range(j_start, j_start+game_state.board.n) if game_state.board.get(x,y) != SudokuBoard.empty])
+
+    return values
