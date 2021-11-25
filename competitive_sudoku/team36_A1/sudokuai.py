@@ -23,14 +23,14 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         def possible(i, j, value):
             not_taboo = game_state.board.get(i, j) == SudokuBoard.empty \
                         and not TabooMove(i, j, value) in game_state.taboo_moves
-            # print(i, j, value)
+            # print(i, j, value, not_taboo)
             values = []
             for z in range(N):
                 values.append(game_state.board.get(i, z))
                 # print(game_state.board.get(move.i, z))
             for z in range(N):
                 values.append(game_state.board.get(z, j))
-            valid_move = game_state.board.get(i, j) == SudokuBoard.empty and value not in values
+            valid_move = (game_state.board.get(i, j) == SudokuBoard.empty and value not in values)
 
             return (not_taboo and valid_move), values
 
@@ -54,12 +54,12 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                     continue
             return scores
         # instead of returning the score you need to return the move that has the maximum score
-        move = max(score_move(all_moves))
+        # move = move[max(score_move(all_moves))]
 
         """for move in all_moves:
             print(move.i, move.j, move.value)"""
 
-        # move = random.choice(all_moves)
+        move = random.choice(all_moves)
         print(move.i, move.j, move.value, possible(move.i, move.j, move.value))
         self.propose_move(move)
         while True:
