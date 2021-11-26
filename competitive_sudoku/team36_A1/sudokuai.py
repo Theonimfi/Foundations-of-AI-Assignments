@@ -30,10 +30,41 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             values = get_surrounding_values(i, j, game_state)
             
             return value not in values
+        
+        def minimax (game_state, depth, isMaximisingPlayer):
+            if depth == 3:
+                current_scores = game_state.scores
+                return  None, current_scores[0] - current_scores[1];
             
+            N = game_state.board.N
+            all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in range(1, N+1) if possible(i, j, value)];
+            
+            if isMaximisingPlayer:
+                max_eval = float('-inf');
+                for move in all_moves:
+                    game_state.moves.append(move)
+                    current_eval = minimax(game_state, depth+1, False)[1];
+                    game_state.moves.pop()
+                    print (current_eval)
+                    if float(current_eval) > max_eval:
+                        max_eval = current_eval
+                        best_move = move
+                return best_move, max_eval
+            else:
+                min_eval = float('inf');
+                for move in all_moves:
+                    game_state.moves.append(move)
+                    current_eval = minimax(game_state, depth+1, True)[1];
+                    game_state.moves.pop()
+                    if float(current_eval) < min_eval:
+                        min_eval = current_eval
+                        best_move = move
+                return best_move, min_eval
 
-        all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in range(1, N+1)
-                     if possible(i, j, value)]
+        move = minimax(game_state,0,True)[0];
+
+        self.propose_move(move);
+            
 
         def score_move(moves):
             scores = []
