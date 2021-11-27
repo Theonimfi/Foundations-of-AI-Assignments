@@ -32,7 +32,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             
             return value not in values
         
-        def minimax (game_state, depth, isMaximisingPlayer):
+        def minimax (game_state, depth, alpha, beta, isMaximisingPlayer):
             if depth == 3:
                 current_scores = game_state.scores
                 return  None, current_scores[0] - current_scores[1]
@@ -44,25 +44,30 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 max_eval = float('-inf')
                 for move in all_moves:
                     game_state.moves.append(move)
-                    current_eval = minimax(game_state, depth+1, False)[1]
+                    current_eval = minimax(game_state, depth+1, alpha, beta, False)[1]
                     game_state.moves.pop()
-                    print (current_eval)
                     if float(current_eval) > max_eval:
                         max_eval = current_eval
                         best_move = move
+                    alpha = max(alpha, current_eval)
+                    if beta <= alpha:
+                        break;                    
                 return best_move, max_eval
             else:
                 min_eval = float('inf')
                 for move in all_moves:
                     game_state.moves.append(move)
-                    current_eval = minimax(game_state, depth+1, True)[1]
+                    current_eval = minimax(game_state, depth+1, alpha, beta, True)[1]
                     game_state.moves.pop()
                     if float(current_eval) < min_eval:
                         min_eval = current_eval
                         best_move = move
+                    alpha = min(alpha, current_eval)
+                    if beta <= alpha:
+                        break;  
                 return best_move, min_eval
 
-        move = minimax(game_state,0,True)[0]
+        move = minimax(game_state,0,float('-inf'),float('inf'),True)[0]
 
         self.propose_move(move)
             
