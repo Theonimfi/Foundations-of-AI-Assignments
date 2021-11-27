@@ -103,7 +103,7 @@ def get_surrounding_values(i,j, game_state: GameState):
     values.extend([game_state.board.get(i, z) for z in range(N) if game_state.board.get(i, z) != SudokuBoard.empty])
     
     # get values in column
-    values.extend([game_state.board.get(z, j) for z in range(N) if game_state.board.get(i, z) != SudokuBoard.empty])
+    values.extend([game_state.board.get(z, j) for z in range(N) if game_state.board.get(z, i) != SudokuBoard.empty])
     
     # get values in block
     i_start = int(i/game_state.board.n)*game_state.board.n
