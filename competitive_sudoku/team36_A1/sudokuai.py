@@ -63,7 +63,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                     if float(current_eval) < min_eval:
                         min_eval = current_eval
                         best_move = move
-                    alpha = min(alpha, current_eval)
+                    beta = min(alpha, current_eval)
                     if beta <= alpha:
                         break;  
                 return best_move, min_eval
