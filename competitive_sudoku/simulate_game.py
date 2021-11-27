@@ -141,10 +141,10 @@ def main():
         return
 
     board_text = '''2 2
-       1   2   .   4
-       .   4   .   2
-       2   1   .   3
-       .   .   .   1
+       1   .   .   4
+       .   .   .   .
+       2   1   .   .
+       .   .   .   .
     '''
     if args.board:
         board_text = Path(args.board).read_text()

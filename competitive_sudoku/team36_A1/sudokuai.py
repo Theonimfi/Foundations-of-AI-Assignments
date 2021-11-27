@@ -46,6 +46,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                     game_state.moves.append(move)
                     current_eval = minimax(game_state, depth+1, alpha, beta, False)[1]
                     game_state.moves.pop()
+                    # print(current_eval)
                     if float(current_eval) > max_eval:
                         max_eval = current_eval
                         best_move = move
