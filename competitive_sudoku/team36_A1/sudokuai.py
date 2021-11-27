@@ -8,6 +8,7 @@ from competitive_sudoku.sudoku import GameState, Move, SudokuBoard, TabooMove
 import competitive_sudoku.sudokuai
 import datetime
 
+
 class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
     """
     Sudoku AI that computes a move for a given sudoku configuration.
@@ -34,16 +35,16 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         def minimax (game_state, depth, isMaximisingPlayer):
             if depth == 3:
                 current_scores = game_state.scores
-                return  None, current_scores[0] - current_scores[1];
+                return  None, current_scores[0] - current_scores[1]
             
             N = game_state.board.N
-            all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in range(1, N+1) if possible(i, j, value)];
+            all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in range(1, N+1) if possible(i, j, value)]
             
             if isMaximisingPlayer:
-                max_eval = float('-inf');
+                max_eval = float('-inf')
                 for move in all_moves:
                     game_state.moves.append(move)
-                    current_eval = minimax(game_state, depth+1, False)[1];
+                    current_eval = minimax(game_state, depth+1, False)[1]
                     game_state.moves.pop()
                     print (current_eval)
                     if float(current_eval) > max_eval:
@@ -51,19 +52,19 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                         best_move = move
                 return best_move, max_eval
             else:
-                min_eval = float('inf');
+                min_eval = float('inf')
                 for move in all_moves:
                     game_state.moves.append(move)
-                    current_eval = minimax(game_state, depth+1, True)[1];
+                    current_eval = minimax(game_state, depth+1, True)[1]
                     game_state.moves.pop()
                     if float(current_eval) < min_eval:
                         min_eval = current_eval
                         best_move = move
                 return best_move, min_eval
 
-        move = minimax(game_state,0,True)[0];
+        move = minimax(game_state,0,True)[0]
 
-        self.propose_move(move);
+        self.propose_move(move)
             
 
         def score_move(moves):
@@ -88,12 +89,13 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         """for move in all_moves:
             print(move.i, move.j, move.value)"""
 
-        move = random.choice(all_moves)
-        print(move.i, move.j, move.value, possible(move.i, move.j, move.value))
-        self.propose_move(move)
+        # move = random.choice(all_moves)
+        # print(move.i, move.j, move.value, possible(move.i, move.j, move.value))
+        # self.propose_move(move)
         while True:
             time.sleep(0.2)
-            self.propose_move(random.choice(all_moves))
+            # self.propose_move(random.choice(all_moves))
+
 
 def get_surrounding_values(i,j, game_state: GameState):
     N = game_state.board.N
@@ -103,7 +105,7 @@ def get_surrounding_values(i,j, game_state: GameState):
     values.extend([game_state.board.get(i, z) for z in range(N) if game_state.board.get(i, z) != SudokuBoard.empty])
     
     # get values in column
-    values.extend([game_state.board.get(z, j) for z in range(N) if game_state.board.get(z, i) != SudokuBoard.empty])
+    values.extend([game_state.board.get(z, j) for z in range(N) if game_state.board.get(z, j) != SudokuBoard.empty])
     
     # get values in block
     i_start = int(i/game_state.board.n)*game_state.board.n
