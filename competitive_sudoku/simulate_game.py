@@ -140,11 +140,13 @@ def main():
         check_oracle(solve_sudoku_path)
         return
 
-    board_text = '''2 2
-       1   .   .   4
-       .   .   .   .
-       2   1   .   .
-       .   .   .   .
+    board_text = '''2 3
+   .   .   .   .   .   . 
+   .   .   .   .   .   .
+   .   .   .   .   .   .
+   .   .   .   .   .   .
+   .   .   .   .   .   .
+   .   .   .   .   .   .
     '''
     if args.board:
         board_text = Path(args.board).read_text()
