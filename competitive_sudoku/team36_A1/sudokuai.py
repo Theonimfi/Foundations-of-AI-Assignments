@@ -159,6 +159,6 @@ def get_row(i, game_state):
 
 
 def get_block(i,j, game_state):
-    i_start = int(i/game_state.board.n)*game_state.board.n
-    j_start = int(j/game_state.board.m)*game_state.board.m
-    return [game_state.board.get(x, y) for x in range(i_start, i_start+game_state.board.n) for y in range(j_start, j_start+game_state.board.m) if game_state.board.get(x,y) != SudokuBoard.empty]
+    i_start = int(i/game_state.board.m)*game_state.board.m
+    j_start = int(j/game_state.board.n)*game_state.board.n
+    return [game_state.board.get(x, y) for x in range(i_start, i_start+game_state.board.m) for y in range(j_start, j_start+game_state.board.n) if game_state.board.get(x,y) != SudokuBoard.empty]
