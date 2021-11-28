@@ -2,12 +2,13 @@
 #  Software License, (See accompanying file LICENSE or copy at
 #  https://www.gnu.org/licenses/gpl-3.0.txt)
 
+# # python .\simulate_game.py --first greedy_player --second team36_A1 --board .\boards\random-3x3.txt
+
+
 import random
 import time
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard, TabooMove
 import competitive_sudoku.sudokuai
-import datetime
-
 
 class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
     """
@@ -17,9 +18,8 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
     def __init__(self):
         super().__init__()
 
-        self.MAX_DEPTH = 1
-# python .\simulate_game.py --first greedy_player --second team36_A1 --board .\boards\random-3x3.txt
-    # N.B. This is a very naive implementation. 
+        self.MAX_DEPTH = 50
+    # N.B. This is a very naive implementation.
     def compute_best_move(self, game_state: GameState) -> None:
         N = game_state.board.N
 
@@ -46,6 +46,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             complete_column = len(get_column(Move.j, game_state)) == game_state.board.N-1
             complete_box = len(get_block(Move.i, Move.j, game_state)) == game_state.board.N-1
 
+
             if complete_row and complete_column and complete_box:
                 score += 7
             elif complete_row and complete_column:
@@ -62,27 +63,18 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             current_scores = game_state.scores
             all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in range(1, N+1) if possible(i, j, value)]
             
-
-            current_scores
-            # print(depth,max_depth)
             if depth==max_depth or len(all_moves) == 0:
-                # print("max?")
                 return None, current_scores[1] - current_scores[0]
-            # print(len(all_moves))
-            # print(all_moves[0])
-            # print(depth)
-            # print("\n")
+    
             if isMaximisingPlayer:
                 max_eval = float('-inf')
                 for move in all_moves:
                     move_score = score_move(move)
-                    # print()
-
-                    print(current_scores[1] - current_scores[0] )
 
                     game_state.scores[1] += move_score
-                    print(f"{depth}/{max_depth}, Maximazing move: {move}, {move_score}, {game_state.scores[1]- game_state.scores[0]}")
                     game_state.board.put(move.i, move.j, move.value)
+
+                    # print(f"{depth}/{max_depth}, Maximazing move: {move}, {move_score}, {game_state.scores[1]- game_state.scores[0]}")
                     
                     current_eval = minimax(game_state, depth+1, alpha, beta, False, max_depth)[1]
 
@@ -93,9 +85,11 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                         max_eval = current_eval
                         best_move = move
 
-                    # alpha = max(alpha, current_eval)
-                    # if beta <= alpha:
-                    #     break;       
+
+                    alpha = max(alpha, current_eval)
+                    if beta <= alpha:
+                        break;       
+
                 # print(depth, max_eval)             
                 return best_move, max_eval
             else:
@@ -106,7 +100,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                     game_state.scores[0] += move_score
                 
                     game_state.board.put(move.i, move.j, move.value)
-                    # print(f"{depth}/{max_depth}, Minimazing move: {move}, {move_score}, {game_state.scores[1]- game_state.scores[0]}")
 
                     current_eval = minimax(game_state, depth+1, alpha, beta, True, max_depth)[1]
 
@@ -116,9 +109,9 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                     if float(current_eval) < min_eval:
                         min_eval = current_eval
                         best_move = move
-                    # beta = min(alpha, current_eval)
-                    # if beta <= alpha:
-                    #     break;  
+                    beta = min(alpha, current_eval)
+                    if beta <= alpha:
+                        break;  
                 # print(depth, min_eval)             
 
                 return best_move, min_eval
@@ -126,14 +119,13 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
 
         def do_minimax_rec(game_state):
-
             best_move = None
             
             for i in range(1, self.MAX_DEPTH):
                 best_move = minimax(game_state,0,float('-inf'),float('inf'),True, max_depth=i)[0]
-                print(i)
+
                 self.propose_move(best_move)
-            
+
                 print(f"Depth: {i}, Best move: {best_move}, score: {score_move(best_move)}")
 
 
@@ -143,21 +135,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         self.propose_move(move)
 
         do_minimax_rec(game_state)
-
-
-
-        # instead of returning the score you need to return the move that has the maximum score
-        # move = move[max(score_move(all_moves))]
-
-        """for move in all_moves:
-            print(move.i, move.j, move.value)"""
-
-        # move = random.choice(all_moves)
-        # print(move.i, move.j, move.value, possible(move.i, move.j, move.value))
-        # self.propose_move(move)
-        while True:
-            time.sleep(0.2)
-            # self.propose_move(random.choice(all_moves))
 
 
 def get_surrounding_values(i,j, game_state: GameState):
