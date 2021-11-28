@@ -33,7 +33,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             return value not in values
         
         def minimax (game_state, depth, alpha, beta, isMaximisingPlayer):
-            if depth == 3:
+            if depth == 0:
                 current_scores = game_state.scores
                 return  None, current_scores[0] - current_scores[1]
             
@@ -44,7 +44,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 max_eval = float('-inf')
                 for move in all_moves:
                     game_state.moves.append(move)
-                    current_eval = minimax(game_state, depth+1, alpha, beta, False)[1]
+                    current_eval = minimax(game_state, depth-1, alpha, beta, False)[1]
                     game_state.moves.pop()
                     if float(current_eval) > max_eval:
                         max_eval = current_eval
@@ -57,18 +57,22 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 min_eval = float('inf')
                 for move in all_moves:
                     game_state.moves.append(move)
-                    current_eval = minimax(game_state, depth+1, alpha, beta, True)[1]
+                    current_eval = minimax(game_state, depth-1, alpha, beta, True)[1]
                     game_state.moves.pop()
                     if float(current_eval) < min_eval:
                         min_eval = current_eval
                         best_move = move
-                    beta = min(alpha, current_eval)
+                    beta = min(beta, current_eval)
                     if beta <= alpha:
                         break;  
                 return best_move, min_eval
 
-        move = minimax(game_state,0,float('-inf'),float('inf'),True)[0]
-
+        all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in range(1, N+1) if possible(i, j, value)]
+            
+        move = minimax(game_state,1,float('-inf'),float('inf'),True)[0]
+        self.propose_move(move)  
+                   
+        move = minimax(game_state,3,float('-inf'),float('inf'),True)[0]
         self.propose_move(move)
             
 
