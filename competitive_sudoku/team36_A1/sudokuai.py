@@ -14,10 +14,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
     """
     Sudoku AI that computes a move for a given sudoku configuration.
     """
-    player1 = module1.SudokuAI()
-    player2 = module2.SudokuAI()
-    print("hiiiiiiiiiiiiii")
-    print(player1)
 
     def __init__(self):
         super().__init__()
