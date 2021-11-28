@@ -17,6 +17,8 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
     def __init__(self):
         super().__init__()
 
+        self.MAX_DEPTH = 100
+
     # N.B. This is a very naive implementation.
     def compute_best_move(self, game_state: GameState) -> None:
         N = game_state.board.N
@@ -32,62 +34,121 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             
             return value not in values
         
-        def minimax (game_state, depth, alpha, beta, isMaximisingPlayer):
-            if depth == 3:
-                current_scores = game_state.scores
-                return  None, current_scores[0] - current_scores[1]
-            
+
+        # def do_minimax(game_state, all_moves):
+        #     state_stack = []
+
+        #     for i in range(self.MAX_DEPTH):
+
+        def score_move(Move):
+            score = 0
+            complete_row = len(get_row(Move.i, game_state)) == game_state.board.N-1
+            complete_column = len(get_column(Move.j, game_state)) == game_state.board.N-1
+            complete_box = len(get_block(Move.i, Move.j, game_state)) == game_state.board.N-1
+            # print(Move)
+            # print(len(get_row(Move.i, game_state)), complete_row)
+            # print(len(get_column(Move.j, game_state)), complete_column)
+            # print(len(get_block(Move.i, Move.j, game_state)), complete_box)
+            if complete_row and complete_column and complete_box:
+                score += 7
+            elif complete_row and complete_column:
+                score += 3
+            elif (complete_row and complete_box) or (complete_column and complete_box):
+                score += 3
+            elif complete_row or complete_column or complete_box:
+                score += 1
+            return score
+
+        def minimax(game_state, depth, alpha, beta, isMaximisingPlayer, max_depth=2):
+
             N = game_state.board.N
+            current_scores = game_state.scores
             all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in range(1, N+1) if possible(i, j, value)]
             
+
+            current_scores
+            # print(depth,max_depth)
+            if depth==max_depth or len(all_moves) == 0:
+                # print("max?")
+                return None, current_scores[1] - current_scores[0]
+            # print(len(all_moves))
+            # print(all_moves[0])
+            # print(depth)
+            # print("\n")
             if isMaximisingPlayer:
                 max_eval = float('-inf')
                 for move in all_moves:
-                    game_state.moves.append(move)
-                    current_eval = minimax(game_state, depth+1, alpha, beta, False)[1]
-                    game_state.moves.pop()
+                    move_score = score_move(move)
+                    # print()
+
+                    # print(current_scores[1] - current_scores[0] )
+
+                    game_state.scores[1] += move_score
+                    # print(f"{depth}/{max_depth}, Maximazing move: {move}, {move_score}, {game_state.scores[1]- game_state.scores[0]}")
+                    game_state.board.put(move.i, move.j, move.value)
+                    
+                    current_eval = minimax(game_state, depth+1, alpha, beta, False, max_depth)[1]
+
+                    game_state.board.put(move.i, move.j, SudokuBoard.empty)
+                    game_state.scores[1] -= move_score
+
                     if float(current_eval) > max_eval:
                         max_eval = current_eval
                         best_move = move
-                    alpha = max(alpha, current_eval)
-                    if beta <= alpha:
-                        break;                    
+
+                    # alpha = max(alpha, current_eval)
+                    # if beta <= alpha:
+                    #     break;       
+                # print(depth, max_eval)             
                 return best_move, max_eval
             else:
                 min_eval = float('inf')
                 for move in all_moves:
-                    game_state.moves.append(move)
-                    current_eval = minimax(game_state, depth+1, alpha, beta, True)[1]
-                    game_state.moves.pop()
+    
+                    move_score = score_move(move)
+                    game_state.scores[0] += move_score
+                
+                    game_state.board.put(move.i, move.j, move.value)
+                    # print(f"{depth}/{max_depth}, Minimazing move: {move}, {move_score}, {game_state.scores[1]- game_state.scores[0]}")
+
+                    current_eval = minimax(game_state, depth+1, alpha, beta, True, max_depth)[1]
+
+                    game_state.board.put(move.i, move.j, SudokuBoard.empty)
+                    game_state.scores[0] -= move_score
+
                     if float(current_eval) < min_eval:
                         min_eval = current_eval
                         best_move = move
-                    beta = min(alpha, current_eval)
-                    if beta <= alpha:
-                        break;  
+                    # beta = min(alpha, current_eval)
+                    # if beta <= alpha:
+                    #     break;  
+                # print(depth, min_eval)             
+
                 return best_move, min_eval
 
-        move = minimax(game_state,0,float('-inf'),float('inf'),True)[0]
 
-        self.propose_move(move)
+
+        def do_minimax_rec(game_state):
+
+            best_move = None
             
+            for i in range(1, self.MAX_DEPTH):
+                best_move = minimax(game_state,0,float('-inf'),float('inf'),True, max_depth=i)[0]
 
-        def score_move(moves):
-            scores = []
-            for move in moves:
-                score = 0
-                complete_row = "check move against gamestate"
-                complete_column = "check move against gamestate"
-                complete_box = "check move against gamestate"
-                if complete_row and complete_column and complete_box:
-                    score += 7
-                elif complete_row and complete_column:
-                    score += 3
-                elif complete_row or complete_column:
-                    score += 1
-                else:
-                    continue
-            return scores
+                self.propose_move(best_move)
+
+                print(f"Depth: {i}, Best move: {best_move}, score: {score_move(best_move)}")
+
+
+        all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in range(1, N+1) if possible(i, j, value)]\
+            
+        move = random.choice(all_moves)
+        self.propose_move(move)
+
+        do_minimax_rec(game_state)
+
+
+
         # instead of returning the score you need to return the move that has the maximum score
         # move = move[max(score_move(all_moves))]
 
@@ -107,14 +168,24 @@ def get_surrounding_values(i,j, game_state: GameState):
     values = []
 
     # get values in row
-    values.extend([game_state.board.get(i, z) for z in range(N) if game_state.board.get(i, z) != SudokuBoard.empty])
+    values.extend(get_row(i, game_state))
     
     # get values in column
-    values.extend([game_state.board.get(z, j) for z in range(N) if game_state.board.get(z, j) != SudokuBoard.empty])
+    values.extend(get_column(j, game_state))
     
     # get values in block
-    i_start = int(i/game_state.board.n)*game_state.board.n
-    j_start = int(j/game_state.board.n)*game_state.board.n
-    values.extend([game_state.board.get(x, y) for x in range(i_start, i_start+game_state.board.n) for y in range(j_start, j_start+game_state.board.n) if game_state.board.get(x,y) != SudokuBoard.empty])
+    values.extend(get_block(i,j, game_state))
 
     return values
+
+def get_column(j, game_state):
+    return [game_state.board.get(z, j) for z in range(game_state.board.N) if game_state.board.get(z, j) != SudokuBoard.empty]
+
+def get_row(i, game_state):
+    return [game_state.board.get(i, z) for z in range(game_state.board.N) if game_state.board.get(i, z) != SudokuBoard.empty]
+
+
+def get_block(i,j, game_state):
+    i_start = int(i/game_state.board.n)*game_state.board.n
+    j_start = int(j/game_state.board.n)*game_state.board.n
+    return [game_state.board.get(x, y) for x in range(i_start, i_start+game_state.board.n) for y in range(j_start, j_start+game_state.board.n) if game_state.board.get(x,y) != SudokuBoard.empty]
