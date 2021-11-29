@@ -7,6 +7,7 @@
 import argparse
 import importlib
 import multiprocessing
+import pickle
 import platform
 import re
 import time
@@ -32,7 +33,7 @@ def check_oracle(solve_sudoku_path: str) -> None:
         print(output)
 
 
-def simulate_game(initial_board: SudokuBoard, player1: SudokuAI, player2: SudokuAI, solve_sudoku_path: str, calculation_time: float = 0.5) -> None:
+def simulate_game(initial_board: SudokuBoard, player1: SudokuAI, player2: SudokuAI, solve_sudoku_path: str, calculation_time: float = 0.5):
     """
     Simulates a game between two instances of SudokuAI, starting in initial_board. The first move is played by player1.
     @param initial_board: The initial position of the game.
@@ -114,10 +115,13 @@ def simulate_game(initial_board: SudokuBoard, player1: SudokuAI, player2: Sudoku
             print(game_state)
         if game_state.scores[0] > game_state.scores[1]:
             print('Player 1 wins the game.')
+            return 1
         elif game_state.scores[0] == game_state.scores[1]:
             print('The game ends in a draw.')
+            return 0
         elif game_state.scores[0] < game_state.scores[1]:
             print('Player 2 wins the game.')
+            return -1
 
 
 def main():
@@ -134,6 +138,7 @@ def main():
                                 default=0.5)
     cmdline_parser.add_argument('--check', help="check if the solve_sudoku program works", action='store_true')
     cmdline_parser.add_argument('--board', metavar='FILE', type=str, help='a text file containing the start position')
+    cmdline_parser.add_argument('--trials', type=int, help='amount of runs', default=1)
     args = cmdline_parser.parse_args()
 
     if args.check:
@@ -161,8 +166,29 @@ def main():
     if args.second in ('random_player', 'greedy_player'):
         player2.solve_sudoku_path = solve_sudoku_path
 
-    simulate_game(board, player1, player2, solve_sudoku_path=solve_sudoku_path, calculation_time=args.time)
+    i = 0
+    results = []
+    while i < args.trials:
+        if i % 2 == 0:
+            # simulate_game(board, player1, player2, solve_sudoku_path=solve_sudoku_path, calculation_time=args.time)
+            result = int(simulate_game(board, player1, player2, solve_sudoku_path=solve_sudoku_path,
+                                       calculation_time=args.time))
+            results.append(result)
+        elif i % 2 != 0:
+            result = -int(simulate_game(board, player1, player2, solve_sudoku_path=solve_sudoku_path,
+                                        calculation_time=args.time))
+            results.append(result)
+        print("this is the ", i, "th trial")
+        i += 1
+    pickle.dump(results, open('trials.p', 'wb'))
 
 
 if __name__ == '__main__':
     main()
+    with open('trials.p', 'rb') as pickle_file:
+        results = pickle.load(pickle_file)
+    print(results)
+    print(dict((i, results.count(i)) for i in results))
+
+
+
