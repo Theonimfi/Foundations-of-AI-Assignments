@@ -142,12 +142,13 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
                 print(f"Depth: {i}, Best move: {best_move}, score: {score_move(best_move)}")
 
-        all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in range(1, N+1) if possible(i, j, value)]
-        print(f"\n\nnum moves: {len(all_moves)}")
+        all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in range(1, N+1) if possible(i, j, value)]\
+            
         move = random.choice(all_moves)
         self.propose_move(move)
 
         do_minimax_rec(game_state)
+
 
 def get_surrounding_values(i,j, game_state: GameState):
     N = game_state.board.N
@@ -160,17 +161,22 @@ def get_surrounding_values(i,j, game_state: GameState):
     values.extend(get_column(j, game_state))
     
     # get values in block
-    values.extend(get_block(i,j, game_state))
+    values.extend(get_block(i, j, game_state))
 
     return values
+
 
 def get_column(j, game_state):
     return [game_state.board.get(z, j) for z in range(game_state.board.N) if game_state.board.get(z, j) != SudokuBoard.empty]
 
+
 def get_row(i, game_state):
     return [game_state.board.get(i, z) for z in range(game_state.board.N) if game_state.board.get(i, z) != SudokuBoard.empty]
+
 
 def get_block(i,j, game_state):
     i_start = int(i/game_state.board.m)*game_state.board.m
     j_start = int(j/game_state.board.n)*game_state.board.n
     return [game_state.board.get(x, y) for x in range(i_start, i_start+game_state.board.m) for y in range(j_start, j_start+game_state.board.n) if game_state.board.get(x,y) != SudokuBoard.empty]
+
+
