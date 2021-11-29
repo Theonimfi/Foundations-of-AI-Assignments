@@ -170,15 +170,17 @@ def main():
     results = []
     while i < args.trials:
         if i % 2 == 0:
+            print("we are player 1 in this case")
             # simulate_game(board, player1, player2, solve_sudoku_path=solve_sudoku_path, calculation_time=args.time)
             result = int(simulate_game(board, player1, player2, solve_sudoku_path=solve_sudoku_path,
                                        calculation_time=args.time))
             results.append(result)
         elif i % 2 != 0:
-            result = -int(simulate_game(board, player1, player2, solve_sudoku_path=solve_sudoku_path,
+            print("we are player 2 in this case")
+            result = -int(simulate_game(board, player2, player1, solve_sudoku_path=solve_sudoku_path,
                                         calculation_time=args.time))
             results.append(result)
-        print("this is the ", i, "th trial")
+        print("this was trial number:", i+1)
         i += 1
     pickle.dump(results, open('trials.p', 'wb'))
 
