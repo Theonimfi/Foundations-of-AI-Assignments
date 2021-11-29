@@ -140,7 +140,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
                 self.propose_move(best_move)
 
-                print(f"Depth: {i}, Best move: {best_move}, score: {score_move(best_move)}")
+                # print(f"Depth: {i}, Best move: {best_move}, score: {score_move(best_move)}")
 
         all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in range(1, N+1) if possible(i, j, value)]\
             

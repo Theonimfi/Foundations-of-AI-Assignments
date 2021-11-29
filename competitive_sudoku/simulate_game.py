@@ -19,10 +19,10 @@ from competitive_sudoku.sudokuai import SudokuAI
 
 def check_oracle(solve_sudoku_path: str) -> None:
     board_text = '''2 2
-       1   2   3   4
-       3   4   .   2
-       2   1   .   3
-       .   .   .   1
+   .   .   .   .
+   .   .   .   .
+   .   .   .   .
+   .   .   .   .
     '''
     output = solve_sudoku(solve_sudoku_path, board_text)
     result = 'has a solution' in output
@@ -83,16 +83,16 @@ def simulate_game(initial_board: SudokuBoard, player1: SudokuAI, player2: Sudoku
             if best_move != Move(0, 0, 0):
                 if TabooMove(i, j, value) in game_state.taboo_moves:
                     print(f'Error: {best_move} is a taboo move. Player {2-player_number} wins the game.')
-                    return
+                    return 1 if player_number == 2 else -1
                 board_text = str(game_state.board)
                 options = f'--move "{game_state.board.rc2f(i, j)} {value}"'
                 output = solve_sudoku(solve_sudoku_path, board_text, options)
                 if 'Invalid move' in output:
                     print(f'Error: {best_move} is not a valid move. Player {3-player_number} wins the game.')
-                    return
+                    return 1 if player_number == 2 else -1
                 if 'Illegal move' in output:
                     print(f'Error: {best_move} is not a legal move. Player {3-player_number} wins the game.')
-                    return
+                    return 1 if player_number == 2 else -1
                 if 'has no solution' in output:
                     print(f'The sudoku has no solution after the move {best_move}.')
                     player_score = 0
@@ -109,7 +109,7 @@ def simulate_game(initial_board: SudokuBoard, player1: SudokuAI, player2: Sudoku
                         raise RuntimeError(f'Unexpected output of sudoku solver: "{output}".')
             else:
                 print(f'No move was supplied. Player {3-player_number} wins the game.')
-                return
+                return 1 if player_number == 2 else -1
             game_state.scores[player_number-1] = game_state.scores[player_number-1] + player_score
             print(f'Reward: {player_score}')
             print(game_state)
@@ -145,13 +145,11 @@ def main():
         check_oracle(solve_sudoku_path)
         return
 
-    board_text = '''2 3
-   .   .   .   .   .   . 
-   .   .   .   .   .   .
-   .   .   .   .   .   .
-   .   .   .   .   .   .
-   .   .   .   .   .   .
-   .   .   .   .   .   .
+    board_text = '''2 2
+   .   .   .   .
+   .   .   .   .
+   .   .   .   .
+   .   .   .   .
     '''
     if args.board:
         board_text = Path(args.board).read_text()
@@ -180,7 +178,7 @@ def main():
             result = -int(simulate_game(board, player2, player1, solve_sudoku_path=solve_sudoku_path,
                                         calculation_time=args.time))
             results.append(result)
-        print("this was trial number:", i+1)
+        print("this was trial number:", i+1, "\n -----------------")
         i += 1
     pickle.dump(results, open('trials.p', 'wb'))
 
