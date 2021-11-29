@@ -86,9 +86,9 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                         best_move = move
 
 
-                    alpha = max(alpha, current_eval)
-                    if beta <= alpha:
-                        break;       
+                    # alpha = max(alpha, current_eval)
+                    # if beta >= alpha:
+                    #     break;       
 
                 # print(depth, max_eval)             
                 return best_move, max_eval
