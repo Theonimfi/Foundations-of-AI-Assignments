@@ -34,9 +34,28 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             if not not_taboo:
                 return False
 
-            values = get_surrounding_values(i, j, game_state)
+            # check values in row
+            for z in range(N):
+                if game_state.board.get(z, j) != SudokuBoard.empty:
+                    if value == game_state.board.get(z, j):
+                        return False
 
-            return value not in values
+            # check values in column
+            for z in range(N):
+                if game_state.board.get(i, z) != SudokuBoard.empty:
+                    if value == game_state.board.get(i, z):
+                        return False
+
+            # check values in block
+            i_start = int(i / game_state.board.m) * game_state.board.m
+            j_start = int(j / game_state.board.n) * game_state.board.n
+            for x in range(i_start, i_start + game_state.board.m):
+                for y in range(j_start, j_start + game_state.board.n):
+                    if game_state.board.get(x, y) != SudokuBoard.empty:
+                        if game_state.board.get(x, y) == value:
+                            return False
+
+            return True
 
         def score_move(Move):
             score = 0
