@@ -39,6 +39,35 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             
             return [value for value in range(1, N + 1) if value not in values]
 
+        def possible1(i, j, value):
+            not_taboo = game_state.board.get(i, j) == SudokuBoard.empty \
+                        and not TabooMove(i, j, value) in game_state.taboo_moves
+
+            if not not_taboo:
+                return False
+
+            # check values in row
+            for z in range(N):
+                if game_state.board.get(z, j) != SudokuBoard.empty:
+                    if value == game_state.board.get(z, j):
+                        return False
+
+            # check values in column
+            for z in range(N):
+                if game_state.board.get(i, z) != SudokuBoard.empty:
+                    if value == game_state.board.get(i, z):
+                        return False
+
+            # check values in block
+            i_start = int(i / game_state.board.m) * game_state.board.m
+            j_start = int(j / game_state.board.n) * game_state.board.n
+            for x in range(i_start, i_start + game_state.board.m):
+                for y in range(j_start, j_start + game_state.board.n):
+                    if game_state.board.get(x, y) != SudokuBoard.empty:
+                        if game_state.board.get(x, y) == value:
+                            return False
+
+            return True
 
     
         def score_move(Move):
@@ -122,10 +151,12 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 return best_move, min_eval
 
         start = time.time()
+        # all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in range(1, N+1) if possible1(i, j, value)]
+
         all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in get_values(i,j,game_state) if possible(i, j, value)]
-        print(time.time()-start)
         # print(all_moves)
         move = random.choice(all_moves)
+        print(time.time()-start)
         self.propose_move(move)
 
         for i in range(1, 50):
@@ -137,31 +168,37 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
 
 def get_surrounding_values(i, j, game_state: GameState):
+    # possible_values = [value for value in range(1, N + 1)]
     values = set()
 
     # get values in row
     values.update(get_row(i, game_state))
+    if len(values) == game_state.board.N:
+        return values
 
     # get values in column
     values.update(get_column(j, game_state))
+    if len(values) == game_state.board.N:
+        return values
 
     # get values in block
     values.update(get_block(i, j, game_state))
+
 
     return values
 
 def get_column(j, game_state):
     return [game_state.board.get(z, j) for z in range(game_state.board.N) if
-            game_state.board.get(z, j)]
+            game_state.board.get(z, j) != SudokuBoard.empty]
 
 
 def get_row(i, game_state):
     return [game_state.board.get(i, z) for z in range(game_state.board.N) if
-            game_state.board.get(i, z)]
+            game_state.board.get(i, z) != SudokuBoard.empty]
 
 
 def get_block(i, j, game_state):
     i_start = int(i / game_state.board.m) * game_state.board.m
     j_start = int(j / game_state.board.n) * game_state.board.n
     return [game_state.board.get(x, y) for x in range(i_start, i_start + game_state.board.m) for y in
-            range(j_start, j_start + game_state.board.n) if game_state.board.get(x, y)]
+            range(j_start, j_start + game_state.board.n) if game_state.board.get(x, y) != SudokuBoard.empty]
