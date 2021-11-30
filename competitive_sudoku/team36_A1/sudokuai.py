@@ -90,7 +90,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                     alpha = max(alpha, max_eval)
                     if max_eval >= beta:
                         break;
-                print(best_move, max_eval)
                 return best_move, max_eval
             else:
                 min_eval = float('inf')
