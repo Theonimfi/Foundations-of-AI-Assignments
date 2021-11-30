@@ -31,13 +31,16 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             not_taboo = game_state.board.get(i, j) == SudokuBoard.empty \
                         and not TabooMove(i, j, value) in game_state.taboo_moves
 
-            if not not_taboo:
-                return False
+            return not_taboo
 
+        def get_values(i,j, game_state):
+            
             values = get_surrounding_values(i, j, game_state)
+            
+            return [value for value in range(1, N + 1) if value not in values]
 
-            return value not in values
 
+    
         def score_move(Move):
             score = 0
             complete_row = len(get_row(Move.i, game_state)) == game_state.board.N - 1
@@ -57,8 +60,8 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         def minimax(game_state, depth, alpha, beta, isMaximisingPlayer, current_score, empty_squares):
 
             N = game_state.board.N
-            current_scores = game_state.scores
-            all_moves = [Move(i, j, value) for (i,j) in empty_squares for value in range(1, N + 1) if
+
+            all_moves = [Move(i, j, value) for (i,j) in empty_squares for value in get_values(i,j,game_state) if
                          possible(i, j, value)]
 
             if depth == 0 or len(all_moves) == 0:
@@ -118,7 +121,10 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
                 return best_move, min_eval
 
-        all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in range(1, N + 1) if possible(i, j, value)]
+        start = time.time()
+        all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in get_values(i,j,game_state) if possible(i, j, value)]
+        print(time.time()-start)
+        # print(all_moves)
         move = random.choice(all_moves)
         self.propose_move(move)
 
@@ -131,32 +137,31 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
 
 def get_surrounding_values(i, j, game_state: GameState):
-    values = []
+    values = set()
 
     # get values in row
-    values.extend(get_row(i, game_state))
+    values.update(get_row(i, game_state))
 
     # get values in column
-    values.extend(get_column(j, game_state))
+    values.update(get_column(j, game_state))
 
     # get values in block
-    values.extend(get_block(i, j, game_state))
+    values.update(get_block(i, j, game_state))
 
     return values
 
-
 def get_column(j, game_state):
     return [game_state.board.get(z, j) for z in range(game_state.board.N) if
-            game_state.board.get(z, j) != SudokuBoard.empty]
+            game_state.board.get(z, j)]
 
 
 def get_row(i, game_state):
     return [game_state.board.get(i, z) for z in range(game_state.board.N) if
-            game_state.board.get(i, z) != SudokuBoard.empty]
+            game_state.board.get(i, z)]
 
 
 def get_block(i, j, game_state):
     i_start = int(i / game_state.board.m) * game_state.board.m
     j_start = int(j / game_state.board.n) * game_state.board.n
     return [game_state.board.get(x, y) for x in range(i_start, i_start + game_state.board.m) for y in
-            range(j_start, j_start + game_state.board.n) if game_state.board.get(x, y) != SudokuBoard.empty]
+            range(j_start, j_start + game_state.board.n) if game_state.board.get(x, y)]
