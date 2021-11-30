@@ -118,20 +118,20 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 
                 return best_move, min_eval
 
-        start = time.time()
+        # start = time.time()
 
         all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in get_values(i,j,game_state) if possible(i, j, value)]
-
+        # print(len(all_moves))
         move = random.choice(all_moves)
-        print(time.time()-start)
+        # print(time.time()-start)
         self.propose_move(move)
 
         for i in range(1, 50):
             empty_squares = set([(i, j) for i in range(N) for j in range(N) if game_state.board.get(i, j) == SudokuBoard.empty])
             best_move, eval = minimax(game_state, i, float('-inf'), float('inf'), True, 0, empty_squares)
-            print(f"Depth: {i}, Best move: {best_move}, score: {score_move(best_move)}, {eval}")
 
             self.propose_move(best_move)
+            print(f"Depth: {i}, Best move: {best_move}, score: {score_move(best_move)}, {eval}")
 
 
 def get_surrounding_values(i, j, game_state: GameState):
