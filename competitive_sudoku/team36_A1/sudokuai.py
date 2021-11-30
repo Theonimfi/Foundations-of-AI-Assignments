@@ -38,37 +38,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             values = get_surrounding_values(i, j, game_state)
             
             return [value for value in range(1, N + 1) if value not in values]
-
-        def possible1(i, j, value):
-            not_taboo = game_state.board.get(i, j) == SudokuBoard.empty \
-                        and not TabooMove(i, j, value) in game_state.taboo_moves
-
-            if not not_taboo:
-                return False
-
-            # check values in row
-            for z in range(N):
-                if game_state.board.get(z, j) != SudokuBoard.empty:
-                    if value == game_state.board.get(z, j):
-                        return False
-
-            # check values in column
-            for z in range(N):
-                if game_state.board.get(i, z) != SudokuBoard.empty:
-                    if value == game_state.board.get(i, z):
-                        return False
-
-            # check values in block
-            i_start = int(i / game_state.board.m) * game_state.board.m
-            j_start = int(j / game_state.board.n) * game_state.board.n
-            for x in range(i_start, i_start + game_state.board.m):
-                for y in range(j_start, j_start + game_state.board.n):
-                    if game_state.board.get(x, y) != SudokuBoard.empty:
-                        if game_state.board.get(x, y) == value:
-                            return False
-
-            return True
-
     
         def score_move(Move):
             score = 0
@@ -151,10 +120,9 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 return best_move, min_eval
 
         start = time.time()
-        # all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in range(1, N+1) if possible1(i, j, value)]
 
         all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in get_values(i,j,game_state) if possible(i, j, value)]
-        # print(all_moves)
+
         move = random.choice(all_moves)
         print(time.time()-start)
         self.propose_move(move)
