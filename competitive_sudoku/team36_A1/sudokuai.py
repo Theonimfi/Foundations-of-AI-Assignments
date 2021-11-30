@@ -31,13 +31,26 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             not_taboo = game_state.board.get(i, j) == SudokuBoard.empty \
                         and not TabooMove(i, j, value) in game_state.taboo_moves
 
-            return not_taboo
+            if not not_taboo:
+                return False
 
-        def get_values(i,j, game_state):
-            
-            values = get_surrounding_values(i, j, game_state)
-            
-            return [value for value in range(1, N + 1) if value not in values]
+            for z in range(N):
+                if game_state.board.get(z, j) != SudokuBoard.empty:
+                    if value == game_state.board.get(z, j):
+                        return False
+                if game_state.board.get(i, z) != SudokuBoard.empty:
+                    if value == game_state.board.get(i, z):
+                        return False
+
+            i_start = int(i / game_state.board.m) * game_state.board.m
+            j_start = int(j / game_state.board.n) * game_state.board.n
+            for x in range(i_start, i_start + game_state.board.m):
+                for y in range(j_start, j_start + game_state.board.n):
+                    if game_state.board.get(x, y) != SudokuBoard.empty:
+                        if game_state.board.get(x, y) == value:
+                            return False
+
+            return True
     
         def score_move(Move):
             score = 0
@@ -59,8 +72,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
             N = game_state.board.N
 
-            all_moves = [Move(i, j, value) for (i,j) in empty_squares for value in get_values(i,j,game_state) if
-                         possible(i, j, value)]
+            all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in range(1, N + 1) if possible(i, j, value)]
 
             if depth == 0 or len(all_moves) == 0:
                 return None, current_score
@@ -120,9 +132,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 return best_move, min_eval
 
         start = time.time()
-
-        all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in get_values(i,j,game_state) if possible(i, j, value)]
-
+        all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in range(1, N + 1) if possible(i, j, value)]
         move = random.choice(all_moves)
         print(time.time()-start)
         self.propose_move(move)
@@ -133,27 +143,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             print(f"Depth: {i}, Best move: {best_move}, score: {score_move(best_move)}, {eval}")
 
             self.propose_move(best_move)
-
-
-def get_surrounding_values(i, j, game_state: GameState):
-    # possible_values = [value for value in range(1, N + 1)]
-    values = set()
-
-    # get values in row
-    values.update(get_row(i, game_state))
-    if len(values) == game_state.board.N:
-        return values
-
-    # get values in column
-    values.update(get_column(j, game_state))
-    if len(values) == game_state.board.N:
-        return values
-
-    # get values in block
-    values.update(get_block(i, j, game_state))
-
-
-    return values
 
 def get_column(j, game_state):
     return [game_state.board.get(z, j) for z in range(game_state.board.N) if
