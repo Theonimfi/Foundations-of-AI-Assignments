@@ -29,7 +29,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
             @param i: Row coordinate of the square
             @param j: Column coordinate of the square
-            @param j: Value to be filled in
+            @param value: Value to be filled in
             """
             
             not_taboo = game_state.board.get(i, j) == SudokuBoard.empty \
@@ -183,9 +183,9 @@ def score_move(move: Move, game_state: GameState):
     """
     The move scoring function calculates if a player will get contributed points
     for a given move. If either a block, column or row is completed 1 point is awarded
-    if a two of these are completed 3 points are awarded if all are completed 7 points.
+    if two of these are completed 3 points are awarded if all are completed 7 points.
 
-    @param Move: The move to be checked.
+    @param move: The move to be checked.
     @param game_state: Current Game state.
     """
     score = 0
