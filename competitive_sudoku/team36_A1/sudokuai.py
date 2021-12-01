@@ -2,18 +2,12 @@
 #  Software License, (See accompanying file LICENSE or copy at
 #  https://www.gnu.org/licenses/gpl-3.0.txt)
 
-# # python .\simulate_game.py --first greedy_player --second team36_A1 --board .\boards\random-3x3.txt
-
-
 import random
-import time
 
-import simulate_game
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard, TabooMove
 import competitive_sudoku.sudokuai
-import argparse
-import sys
 
+MAX_DEPTH = 50
 
 class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
     """
@@ -23,43 +17,44 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
     def _init_(self):
         super()._init_()
 
+
     # N.B. This is a very naive implementation.
     def compute_best_move(self, game_state: GameState) -> None:
         N = game_state.board.N
 
         def possible(i, j, value):
+            """
+            Checks if a move is possible to make by looking
+            if it is neither a taboo move nor an already filled square.
+
+            @param i: Row coordinate of the square
+            @param j: Column coordinate of the square
+            @param j: Value to be filled in
+            """
+            
             not_taboo = game_state.board.get(i, j) == SudokuBoard.empty \
                         and not TabooMove(i, j, value) in game_state.taboo_moves
 
             return not_taboo
 
-        def get_values(i,j, game_state):
+        def get_values(i,j):
+            """
+            Determines for a square what kind of values can still be filled in.
+
+            @param i: Row coordinate of the square
+            @param j: Column coordinate of the square
+            """
             
             values = get_surrounding_values(i, j, game_state)
             
             return [value for value in range(1, N + 1) if value not in values]
     
-        def score_move(Move):
-            score = 0
-            complete_row = len(get_row(Move.i, game_state)) == game_state.board.N - 1
-            complete_column = len(get_column(Move.j, game_state)) == game_state.board.N - 1
-            complete_box = len(get_block(Move.i, Move.j, game_state)) == game_state.board.N - 1
-
-            if complete_row and complete_column and complete_box:
-                score += 7
-            elif complete_row and complete_column:
-                score += 3
-            elif (complete_row and complete_box) or (complete_column and complete_box):
-                score += 3
-            elif complete_row or complete_column or complete_box:
-                score += 1
-            return score
-
         def minimax(game_state, depth, alpha, beta, isMaximisingPlayer, current_score, empty_squares):
             """
             The minimax algorithm creates a tree with nodes that includes the current evaluation score of every 
             possible move. By applying alpha-beta pruning to minimax, its efficiency is improved by ignoring 
             calculating the evaluation score of nodes that do not affect the final solution.
+            
             @param game_state: Current Game state.
             @param depth: The depth of the searching tree.
             @param alpha: The value of the alpha of alpha-beta pruning.
@@ -69,7 +64,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             @param empty_squares: The number of empty squares.
             """
             # Find all legal and non taboo moves
-            all_moves = [Move(i, j, value) for (i,j) in empty_squares for value in get_values(i,j,game_state) if
+            all_moves = [Move(i, j, value) for (i,j) in empty_squares for value in get_values(i,j) if
                          possible(i, j, value)]
 
             # Return the current score if the depth level equals to 0 or if there are no other moves
@@ -85,7 +80,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 for move in all_moves:
 
                     # Get the score of the move by calling the score_move function
-                    move_score = score_move(move)
+                    move_score = score_move(move,game_state)
 
                     # Add the score of the move in the current score
                     current_score += move_score
@@ -128,7 +123,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 for move in all_moves:
 
                     # Get the score of the move by calling the score_move function
-                    move_score = score_move(move)
+                    move_score = score_move(move, game_state)
 
                     # Subtract the score of the move in the current score
                     current_score -= move_score
@@ -166,8 +161,10 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 # Return the best move and its evaluation score
                 return best_move, min_eval
 
+        #### MOVE PROPOSITIONING ###
+
         # Find all legal and non taboo moves
-        all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in get_values(i,j,game_state) if possible(i, j, value)]
+        all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in get_values(i,j) if possible(i, j, value)]
 
         # Propose a random move first in case there is no time to implement minimax.
         move = random.choice(all_moves)
@@ -175,16 +172,47 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
         # Start with depth 1 and then increase depth. For every depth, call minimax and propose a move. The more time we have
         # the most accurate the move that the minimax returns
-        for i in range(1, 50):
+        for i in range(1, MAX_DEPTH):
             empty_squares = set([(i, j) for i in range(N) for j in range(N) if game_state.board.get(i, j) == SudokuBoard.empty])
             best_move, eval = minimax(game_state, i, float('-inf'), float('inf'), True, 0, empty_squares)
 
             self.propose_move(best_move)
-            print(f"Depth: {i}, Best move: {best_move}, score: {score_move(best_move)}, {eval}")
+            print(f"Depth: {i}, Best move: {best_move}, score: {score_move(best_move, game_state)}, {eval}")
+
+def score_move(move: Move, game_state: GameState):
+    """
+    The move scoring function calculates if a player will get contributed points
+    for a given move. If either a block, column or row is completed 1 point is awarded
+    if a two of these are completed 3 points are awarded if all are completed 7 points.
+
+    @param Move: The move to be checked.
+    @param game_state: Current Game state.
+    """
+    score = 0
+    complete_row = len(get_row(move.i, game_state)) == game_state.board.N - 1
+    complete_column = len(get_column(move.j, game_state)) == game_state.board.N - 1
+    complete_box = len(get_block(move.i, move.j, game_state)) == game_state.board.N - 1
+
+    if complete_row and complete_column and complete_box:
+        score += 7
+    elif complete_row and complete_column:
+        score += 3
+    elif (complete_row and complete_box) or (complete_column and complete_box):
+        score += 3
+    elif complete_row or complete_column or complete_box:
+        score += 1
+    return score
 
 
 def get_surrounding_values(i, j, game_state: GameState):
-    # possible_values = [value for value in range(1, N + 1)]
+    """
+    Retrieve which values are in the block, row and column of
+    a given square.
+
+    @param i: Row coordinate of the square
+    @param j: Column coordinate of the square
+    @param game_state: Current Game state.
+    """
     values = set()
 
     # Get values in row
@@ -204,16 +232,35 @@ def get_surrounding_values(i, j, game_state: GameState):
     return values
 
 def get_column(j, game_state):
+    """
+    Get all values in a columnn
+
+    @param j: Column number
+    @param game_state: Current Game state.
+    """
     return [game_state.board.get(z, j) for z in range(game_state.board.N) if
             game_state.board.get(z, j) != SudokuBoard.empty]
 
 
 def get_row(i, game_state):
+    """
+    Get all values in a row
+
+    @param i: Row number
+    @param game_state: Current Game state.
+    """
     return [game_state.board.get(i, z) for z in range(game_state.board.N) if
             game_state.board.get(i, z) != SudokuBoard.empty]
 
 
 def get_block(i, j, game_state):
+    """
+    Get all values in a block
+
+    @param i: Row number of a square in the block
+    @param j: Column number of a square in the block
+    @param game_state: Current Game state.
+    """
     i_start = int(i / game_state.board.m) * game_state.board.m
     j_start = int(j / game_state.board.n) * game_state.board.n
     return [game_state.board.get(x, y) for x in range(i_start, i_start + game_state.board.m) for y in
