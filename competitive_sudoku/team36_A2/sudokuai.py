@@ -19,7 +19,9 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
 
     # N.B. This is a very naive implementation.
+
     def compute_best_move(self, game_state: GameState) -> None:
+
         N = game_state.board.N
 
         def possible(i, j, value):
@@ -209,17 +211,21 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         for i in range(1, MAX_DEPTH):
             empty_squares = set([(i, j) for i in range(N) for j in range(N) if game_state.board.get(i, j) == SudokuBoard.empty])
             best_move, eval = minimax(game_state, i, float('-inf'), float('inf'), True, 0, empty_squares)
-
+            print(f"did not play the greedy move, now on depth {i}")
             self.propose_move(best_move)
 
-def score_move(move: Move, game_state: GameState):
-    """
-    The move scoring function calculates if a player will get contributed points
+
+def score_move(move: Move, game_state: GameState) -> int:
+    """The move scoring function calculates if a player will get contributed points
     for a given move. If either a block, column or row is completed 1 point is awarded
     if two of these are completed 3 points are awarded if all are completed 7 points.
 
-    @param move: The move to be checked.
-    @param game_state: Current Game state.
+        Parameters:
+            move: The move to be checked.
+            game_state: The current game state (board)
+
+        Returns:
+            score (int): the score of the move to be played
     """
     score = 0
     complete_row = len(get_row(move.i, game_state)) == game_state.board.N - 1
@@ -242,10 +248,15 @@ def get_surrounding_values(i, j, game_state: GameState):
     Retrieve which values are in the block, row and column of
     a given square.
 
-    @param i: Row coordinate of the square
-    @param j: Column coordinate of the square
-    @param game_state: Current Game state.
+    Parameters:
+            i: Row coordinate of the square
+            j: Column coordinate of the square
+            game_state: The current game state (board)
+
+        Returns:
+            values: the values in the block, row, column surrounding a square
     """
+
     values = set()
 
     # Get values in row
@@ -261,40 +272,53 @@ def get_surrounding_values(i, j, game_state: GameState):
     # Get values in block
     values.update(get_block(i, j, game_state))
 
-
     return values
 
-def get_column(j, game_state):
+
+def get_column(j: int, game_state: GameState):
+    """Retrieve the values in a certain column with coordinate j
+
+        Parameters:
+            j: Column coordinate of the square
+            game_state: The current game state (board)
+
+        Returns:
+            values: The values in the column
     """
-    Get all values in a columnn
+    values = [game_state.board.get(z, j) for z in range(game_state.board.N) if
+              game_state.board.get(z, j) != SudokuBoard.empty]
+    return values
 
-    @param j: Column number
-    @param game_state: Current Game state.
+
+def get_row(i: int, game_state: GameState):
+    """Retrieve the values in a certain row with coordinate i
+
+        Parameters:
+            i: Column coordinate of the square
+            game_state: The current game state (board)
+
+        Returns:
+            values: The values in the column
     """
-    return [game_state.board.get(z, j) for z in range(game_state.board.N) if
-            game_state.board.get(z, j) != SudokuBoard.empty]
+    values = [game_state.board.get(i, z) for z in range(game_state.board.N) if
+              game_state.board.get(i, z) != SudokuBoard.empty]
+    return values
 
 
-def get_row(i, game_state):
+def get_block(i: int, j: int, game_state: GameState):
+    """Get all values in a block with coordinates (i, j)
+
+        Parameters:
+            i: Row number of a square in the block
+            j: Column number of a square in the block
+            game_state: The current game state (board)
+
+        Returns:
+            values: The values in the block
     """
-    Get all values in a row
 
-    @param i: Row number
-    @param game_state: Current Game state.
-    """
-    return [game_state.board.get(i, z) for z in range(game_state.board.N) if
-            game_state.board.get(i, z) != SudokuBoard.empty]
-
-
-def get_block(i, j, game_state):
-    """
-    Get all values in a block
-
-    @param i: Row number of a square in the block
-    @param j: Column number of a square in the block
-    @param game_state: Current Game state.
-    """
     i_start = int(i / game_state.board.m) * game_state.board.m
     j_start = int(j / game_state.board.n) * game_state.board.n
-    return [game_state.board.get(x, y) for x in range(i_start, i_start + game_state.board.m) for y in
-            range(j_start, j_start + game_state.board.n) if game_state.board.get(x, y) != SudokuBoard.empty]
+    values = [game_state.board.get(x, y) for x in range(i_start, i_start + game_state.board.m) for y in
+              range(j_start, j_start + game_state.board.n) if game_state.board.get(x, y) != SudokuBoard.empty]
+    return values
