@@ -31,7 +31,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             @param j: Column coordinate of the square
             @param value: Value to be filled in
             """
-            
+
             not_taboo = game_state.board.get(i, j) == SudokuBoard.empty \
                         and not TabooMove(i, j, value) in game_state.taboo_moves
 
@@ -44,17 +44,39 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             @param i: Row coordinate of the square
             @param j: Column coordinate of the square
             """
-            
+
             values = get_surrounding_values(i, j, game_state)
-            
+
             return [value for value in range(1, N + 1) if value not in values]
-    
+
+
+        def one_remaining_square(i, j, value, game_state: GameState):
+            complete_row = len(get_row(i, game_state)) == game_state.board.N - 1
+            complete_column = len(get_column(j, game_state)) == game_state.board.N - 1
+            complete_box = len(get_block(i, j, game_state)) == game_state.board.N - 1
+
+            if complete_row or complete_column or complete_box:
+                return True
+            else:
+                return False
+
+        def get_moves(N, game_state):
+            moves = []
+            for i in range(N):
+                for j in range(N):
+                    for value in get_values(i, j):
+                        if possible(i, j, value) and one_remaining_square(i, j, value, game_state):
+                            return [Move(i, j, value)]
+                        if possible(i, j, value):
+                            moves.append(Move(i, j, value))
+            return moves
+
         def minimax(game_state, depth, alpha, beta, isMaximisingPlayer, current_score, empty_squares):
             """
-            The minimax algorithm creates a tree with nodes that includes the current evaluation score of every 
-            possible move. By applying alpha-beta pruning to minimax, its efficiency is improved by ignoring 
+            The minimax algorithm creates a tree with nodes that includes the current evaluation score of every
+            possible move. By applying alpha-beta pruning to minimax, its efficiency is improved by ignoring
             calculating the evaluation score of nodes that do not affect the final solution.
-            
+
             @param game_state: Current Game state.
             @param depth: The depth of the searching tree.
             @param alpha: The value of the alpha of alpha-beta pruning.
@@ -63,9 +85,9 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             @param current_score: The current evaluation score of the game.
             @param empty_squares: The number of empty squares.
             """
+            N = game_state.board.N
             # Find all legal and non taboo moves
-            all_moves = [Move(i, j, value) for (i,j) in empty_squares for value in get_values(i,j) if
-                         possible(i, j, value)]
+            all_moves = get_moves(N, game_state)
 
             # Return the current score if the depth level equals to 0 or if there are no other moves
             if depth == 0 or len(all_moves) == 0:
@@ -164,7 +186,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         #### MOVE PROPOSITIONING ###
 
         # Find all legal and non taboo moves
-        all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in get_values(i,j) if possible(i, j, value)]
+        all_moves = get_moves(N, game_state)
 
         # Propose a random move first in case there is no time to implement minimax.
         move = random.choice(all_moves)
