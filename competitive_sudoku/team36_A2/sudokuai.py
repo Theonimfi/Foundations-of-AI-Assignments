@@ -73,7 +73,17 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             else:
                 return False
 
-        def get_moves(N, game_state):
+        def get_moves(N: int, game_state: GameState):
+            """Retrieve all the current moves, possible in a N sized board. If there is a move that can immediately
+               achieve at least one point, play that move.
+
+                Parameters:
+                    N: the size of the board
+                    game_state: The current game state (board)
+
+                Returns:
+                    moves: All moves possible in the current gamestate
+            """
             moves = []
             for i in range(N):
                 for j in range(N):
@@ -243,7 +253,7 @@ def score_move(move: Move, game_state: GameState) -> int:
     return score
 
 
-def get_surrounding_values(i, j, game_state: GameState):
+def get_surrounding_values(i: int, j: int, game_state: GameState):
     """
     Retrieve which values are in the block, row and column of
     a given square.
