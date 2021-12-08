@@ -17,7 +17,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
     def _init_(self):
         super()._init_()
 
-
     # N.B. This is a very naive implementation.
     def compute_best_move(self, game_state: GameState) -> None:
         N = game_state.board.N
@@ -168,15 +167,18 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
         # Propose a random move first in case there is no time to implement minimax.
         move = random.choice(all_moves)
+
         self.propose_move(move)
 
-        # Start with depth 1 and then increase depth. For every depth, call minimax and propose a move. The more time we have
+        # Start with depth 1 and then increase depth.
+        # For every depth, call minimax and propose a move. The more time we have
         # the most accurate the move that the minimax returns
         for i in range(1, MAX_DEPTH):
             empty_squares = set([(i, j) for i in range(N) for j in range(N) if game_state.board.get(i, j) == SudokuBoard.empty])
             best_move, eval = minimax(game_state, i, float('-inf'), float('inf'), True, 0, empty_squares)
 
             self.propose_move(best_move)
+
 
 def score_move(move: Move, game_state: GameState):
     """
@@ -229,6 +231,7 @@ def get_surrounding_values(i, j, game_state: GameState):
 
 
     return values
+
 
 def get_column(j, game_state):
     """

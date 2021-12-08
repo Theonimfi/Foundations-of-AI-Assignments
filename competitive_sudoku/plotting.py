@@ -17,7 +17,6 @@ random3x3empty = pd.DataFrame({
 greedy3x3empty = pd.DataFrame({
     'Time': [0.1, 0.5, 1, 5],
     'Win': [50, 90, 70, 80],
-    'Draw': [0, 0, 0, 0],
     'Loss': [50, 10, 30, 20]
 })
 
@@ -40,7 +39,8 @@ tidy = greedy3x3empty.melt(id_vars='Time').rename(columns=str.title)
 print(tidy)
 
 sns.barplot(x='Time', y='Value', hue='Variable',
-            data=tidy, ax=ax1, palette=['#44BBA4', '#F6F7EB', '#ED1C24'])
+            #'#F6F7EB',
+            data=tidy, ax=ax1, palette=['#44BBA4', '#ED1C24'])
 sns.despine(fig)
 plt.xlabel('Time')
 plt.ylabel('Percentage')

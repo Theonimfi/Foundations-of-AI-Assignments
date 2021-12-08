@@ -37,7 +37,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
             return not_taboo
 
-        def get_values(i,j):
+        def get_values(i, j):
             """
             Determines for a square what kind of values can still be filled in.
 
@@ -49,8 +49,19 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
             return [value for value in range(1, N + 1) if value not in values]
 
-
         def one_remaining_square(i, j, value, game_state: GameState):
+            """Returns a bool indicating if the move completes at least one row/column/box
+
+                Parameters:
+                    i (int): Row coordinate of the square
+                    j (int): Column coordinate of the square
+                    value (int): Value of the move
+                    game_state: Current state of the game
+
+                Returns:
+                    boolean (bool): Returns a bool indicating if the move completes at least one row/column/box
+
+            """
             complete_row = len(get_row(i, game_state)) == game_state.board.N - 1
             complete_column = len(get_column(j, game_state)) == game_state.board.N - 1
             complete_box = len(get_block(i, j, game_state)) == game_state.board.N - 1
@@ -65,10 +76,11 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             for i in range(N):
                 for j in range(N):
                     for value in get_values(i, j):
-                        if possible(i, j, value) and one_remaining_square(i, j, value, game_state):
-                            return [Move(i, j, value)]
                         if possible(i, j, value):
-                            moves.append(Move(i, j, value))
+                            if one_remaining_square(i, j, value, game_state):
+                                return [Move(i, j, value)]
+                            else:
+                                moves.append(Move(i, j, value))
             return moves
 
         def minimax(game_state, depth, alpha, beta, isMaximisingPlayer, current_score, empty_squares):
