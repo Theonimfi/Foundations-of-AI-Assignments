@@ -74,11 +74,11 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 return False
 
         def get_moves(N: int, game_state: GameState):
-            """Retrieve all the current moves, possible in a N sized board. If there is a move that can immediately
-               achieve at least one point, play that move.
+            """ Retrieve all the current moves, possible in a N sized board. If there is a move that can immediately
+                achieve at least one point, play that move.
 
                 Parameters:
-                    N: the size of the board
+                    N (int): the size of the board
                     game_state: The current game state (board)
 
                 Returns:
@@ -109,6 +109,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             @param current_score: The current evaluation score of the game.
             @param empty_squares: The number of empty squares.
             """
+
             N = game_state.board.N
             # Find all legal and non taboo moves
             all_moves = get_moves(N, game_state)
@@ -126,7 +127,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 for move in all_moves:
 
                     # Get the score of the move by calling the score_move function
-                    move_score = score_move(move,game_state)
+                    move_score = score_move(move, game_state)
 
                     # Add the score of the move in the current score
                     current_score += move_score
