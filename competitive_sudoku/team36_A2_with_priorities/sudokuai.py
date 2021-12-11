@@ -58,12 +58,44 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
             return complete_row, complete_column, complete_box
 
+        def two_completions(i, j, game_state: GameState):
+            """
+            """
+            complete_row, complete_column, complete_box = completions(i, j, game_state)
+
+            if complete_row and complete_column or complete_box and complete_column or complete_row and complete_box:
+                return True
+            else:
+                return False
+
         def three_completions(i, j, game_state: GameState):
             """
             """
             complete_row, complete_column, complete_box = completions(i, j, game_state)
 
             if complete_row and complete_column and complete_box:
+                return True
+            else:
+                return False
+
+        def one_completion(i, j, game_state: GameState):
+            """Returns a bool indicating if the move completes at least one row/column/box
+
+                Parameters:
+                    i (int): Row coordinate of the square
+                    j (int): Column coordinate of the square
+                    value (int): Value of the move
+                    game_state: Current state of the game
+
+                Returns:
+                    boolean (bool): Returns a bool indicating if the move completes at least one row/column/box
+
+            """
+            complete_row = len(get_row(i, game_state)) == game_state.board.N - 1
+            complete_column = len(get_column(j, game_state)) == game_state.board.N - 1
+            complete_box = len(get_block(i, j, game_state)) == game_state.board.N - 1
+
+            if complete_row or complete_column or complete_box:
                 return True
             else:
                 return False
@@ -86,6 +118,10 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                     for value in get_values(i, j):
                         if possible(i, j, value):
                             if three_completions(i, j, game_state):
+                                return [Move(i, j, value)]
+                            elif two_completions(i, j, game_state):
+                                return [Move(i, j, value)]
+                            elif one_completion(i, j, game_state):
                                 return [Move(i, j, value)]
                             else:
                                 moves.append(Move(i, j, value))
