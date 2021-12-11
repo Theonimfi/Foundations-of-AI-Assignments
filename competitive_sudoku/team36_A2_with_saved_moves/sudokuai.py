@@ -58,12 +58,44 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
             return complete_row, complete_column, complete_box
 
+        def two_completions(i, j, game_state: GameState):
+            """
+            """
+            complete_row, complete_column, complete_box = completions(i, j, game_state)
+
+            if complete_row and complete_column or complete_box and complete_column or complete_row and complete_box:
+                return True
+            else:
+                return False
+
         def three_completions(i, j, game_state: GameState):
             """
             """
             complete_row, complete_column, complete_box = completions(i, j, game_state)
 
             if complete_row and complete_column and complete_box:
+                return True
+            else:
+                return False
+
+        def one_completion(i, j, game_state: GameState):
+            """Returns a bool indicating if the move completes at least one row/column/box
+
+                Parameters:
+                    i (int): Row coordinate of the square
+                    j (int): Column coordinate of the square
+                    value (int): Value of the move
+                    game_state: Current state of the game
+
+                Returns:
+                    boolean (bool): Returns a bool indicating if the move completes at least one row/column/box
+
+            """
+            complete_row = len(get_row(i, game_state)) == game_state.board.N - 1
+            complete_column = len(get_column(j, game_state)) == game_state.board.N - 1
+            complete_box = len(get_block(i, j, game_state)) == game_state.board.N - 1
+
+            if complete_row or complete_column or complete_box:
                 return True
             else:
                 return False
@@ -91,7 +123,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                                 moves.append(Move(i, j, value))
             return moves
 
-        def minimax(game_state, depth, alpha, beta, isMaximisingPlayer, current_score, empty_squares):
+        def minimax(game_state, depth, alpha, beta, isMaximisingPlayer, current_score, empty_squares, all_moves):
             """
             The minimax algorithm creates a tree with nodes that includes the current evaluation score of every
             possible move. By applying alpha-beta pruning to minimax, its efficiency is improved by ignoring
@@ -105,13 +137,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             @param current_score: The current evaluation score of the game.
             @param empty_squares: The number of empty squares.
             """
-            N = game_state.board.N
-
-            if isMaximisingPlayer:
-                all_moves = get_moves(N, game_state)
-            else:
-                all_moves = [Move(i, j, value) for (i, j) in empty_squares for value in get_values(i, j) if
-                             possible(i, j, value)]
 
             # Return the current score if the depth level equals to 0 or if there are no other moves
             if depth == 0 or len(all_moves) == 0:
@@ -131,27 +156,31 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                     # Add the score of the move in the current score
                     current_score += move_score
 
+                    current_i = move.i
+                    current_j = move.j
+                    current_value = move.value
+
                     # Remove this move from the empty squared table
                     empty_squares.remove((move.i, move.j))
 
                     # Add the move on the board
                     game_state.board.put(move.i, move.j, move.value)
 
-                    print("board")
-                    print(game_state.board)
-
-                    print("depth")
-                    print(depth)
-
-                    print("current_move")
-                    print(move)
-
-                    print("score")
-                    print(current_score)
+                    new_moves = []
+                    for other_move in all_moves:
+                        if ((other_move.i,other_move.j)) in empty_squares:
+                            if other_move.i != current_i and other_move.j != current_j:
+                                new_moves.append(other_move)
+                            elif (other_move.i == current_i and other_move.j != current_j) or (other_move.i != current_i and other_move.j == current_j):
+                                if other_move.value != current_value:
+                                    new_moves.append(other_move)
 
                     # Call the minimax function. Decrease the depth and indicate that since this player is the Max the other
                     # player should be the Min (False). Save the result in the current_eval attribute.
-                    current_eval = minimax(game_state, depth - 1, alpha, beta, False, current_score, empty_squares)[1]
+                    current_eval = minimax(game_state, depth - 1, alpha, beta, False, current_score, empty_squares, new_moves)[1]
+
+                    i = current_i
+                    j = current_j
 
                     # Subtract the move score from current score
                     current_score -= move_score
@@ -175,6 +204,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
                 # Return the best move and its evaluation score
                 return best_move, max_eval
+
             else:
                 # Add the highest possible value in max_eval
                 min_eval = float('inf')
@@ -186,15 +216,31 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                     # Subtract the score of the move in the current score
                     current_score -= move_score
 
+                    current_i = move.i
+                    current_j = move.j
+                    current_value = move.value
+
                     # Remove this move from the empty squared table
                     empty_squares.remove((move.i, move.j))
 
                     # Add the move on the board
                     game_state.board.put(move.i, move.j, move.value)
 
+                    new_moves = []
+                    for other_move in all_moves:
+                        if ((other_move.i,other_move.j)) in empty_squares:
+                            if other_move.i != current_i and other_move.j != current_j:
+                                new_moves.append(other_move)
+                            elif (other_move.i == current_i and other_move.j != current_j) or (other_move.i != current_i and other_move.j == current_j):
+                                if other_move.value != current_value:
+                                    new_moves.append(other_move)
+
                     # Call the minimax function. Decrease the depth and indicate that since this player is the Min the other
                     # player should be the Max (True). Save the result in the current_eval attribute.
-                    current_eval = minimax(game_state, depth - 1, alpha, beta, True, current_score, empty_squares)[1]
+                    current_eval = minimax(game_state, depth - 1, alpha, beta, True, current_score, empty_squares, new_moves)[1]
+
+                    i = current_i
+                    j = current_j
 
                     # Add the score of the move in the current score
                     current_score += move_score
@@ -222,7 +268,9 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         #### MOVE PROPOSITIONING ###
 
         # Find all legal and non taboo moves
-        all_moves = get_moves(N, game_state)
+        all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in get_values(i,j) if possible(i, j, value)]
+
+        moves = all_moves
 
         # Propose a random move first in case there is no time to implement minimax.
         move = random.choice(all_moves)
@@ -232,8 +280,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         # the most accurate the move that the minimax returns
         for i in range(1, MAX_DEPTH):
             empty_squares = set([(i, j) for i in range(N) for j in range(N) if game_state.board.get(i, j) == SudokuBoard.empty])
-            best_move, eval = minimax(game_state, i, float('-inf'), float('inf'), True, 0, empty_squares)
-            print(f"did not play the greedy move, now on depth {i}")
+            best_move, eval = minimax(game_state, i, float('-inf'), float('inf'), True, 0, empty_squares, moves)
             self.propose_move(best_move)
 
 
