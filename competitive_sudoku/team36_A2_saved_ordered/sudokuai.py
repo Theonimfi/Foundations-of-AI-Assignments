@@ -18,6 +18,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         super().__init__()
 
         self.best_moves = []
+        self.last_moves = []
     # N.B. This is a very naive implementation.
 
     def compute_best_move(self, game_state: GameState) -> None:
@@ -149,7 +150,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 max_eval = float('-inf')
 
                 for i, move in enumerate(all_moves):
-                    # print(i)
 
                     # Get the score of the move by calling the score_move function
                     move_score = score_move(move, game_state)
@@ -189,6 +189,9 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                     if float(current_eval) > max_eval:
                         max_eval = current_eval
                         best_move = move
+
+                        self.last_moves.append([current_eval,move])
+                        
 
                     # Save the max evaluation score in alpha and if the max evaluation is larger than beta which is the min
                     # evaluation score there is no need to investigate the tree further
@@ -282,6 +285,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         for i in range(1, MAX_DEPTH):
 
             # @TODO Order to insert best moves before
+            print(self.last_moves)
             for move in self.best_moves:
                 moves.remove(move)
                 moves.insert(0, move)
@@ -302,6 +306,12 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             # WRITE LATEST  DEPTH to file
             # with open('experimentsv2.0/sample_saved_exper.txt', 'a') as f:
             #         f.write(f",{i}")
+
+
+    def update_best_moves(self, max_eval):
+
+        fo
+
 
 def update_moves(all_moves: list, current_i: int, current_j: int, current_value):
     new_moves = []
