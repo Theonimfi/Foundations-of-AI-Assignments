@@ -151,17 +151,17 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                     # Add the move on the board
                     game_state.board.put(move.i, move.j, move.value)
 
-                    print("board")
-                    print(game_state.board)
+                    #print("board")
+                    #print(game_state.board)
 
-                    print("depth")
-                    print(depth)
+                    #print("depth")
+                    #print(depth)
 
-                    print("current_move")
-                    print(move)
+                    #print("current_move")
+                    #print(move)
 
-                    print("score")
-                    print(current_score)
+                    #print("score")
+                    #print(current_score)
 
                     # Call the minimax function. Decrease the depth and indicate that since this player is the Max the other
                     # player should be the Min (False). Save the result in the current_eval attribute.
