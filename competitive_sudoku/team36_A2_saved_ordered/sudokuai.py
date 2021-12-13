@@ -14,10 +14,10 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
     Sudoku AI that computes a move for a given sudoku configuration.
     """
 
-    def _init_(self):
-        super()._init_()
+    def __init__(self):
+        super().__init__()
 
-
+        self.best_moves = []
     # N.B. This is a very naive implementation.
 
     def compute_best_move(self, game_state: GameState) -> None:
@@ -256,31 +256,52 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
         # Find all legal and non taboo moves
         all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in get_values(i,j) if possible(i, j, value)]
+        
+        
+        # @TODO Initial ordering based on if three completions can be made
+        moves = []
+        for move in all_moves:
+                if three_completions(move.i, move.j, game_state):
+                    moves.insert(0, move)
+                else:
+                    moves.append(move)
 
-        moves = all_moves
+
+        empty_squares = set([(i, j) for i in range(N) for j in range(N) if game_state.board.get(i, j) == SudokuBoard.empty])
+
+        # Start writing depth to file
+        # with open(f'experimentsv2.0/sample_saved_exper.txt', 'a') as f:
+        #     f.write(f'\n{len(empty_squares)},0')
 
         import datetime
         start=datetime.datetime.now()
-        empty_squares = set([(i, j) for i in range(N) for j in range(N) if game_state.board.get(i, j) == SudokuBoard.empty])
 
-        with open(f'experimentsv2.0/sample_saved.txt', 'a') as f:
-            f.write(f'\n{len(empty_squares)},0')
+
         # Start with depth 1 and then increase depth. For every depth, call minimax and propose a move. The more time we have
         # the most accurate the move that the minimax returns
         for i in range(1, MAX_DEPTH):
 
+            # @TODO Order to insert best moves before
+            for move in self.best_moves:
+                moves.remove(move)
+                moves.insert(0, move)
+
             if i > len(empty_squares):
                 break
+            
             best_move, eval = minimax(game_state, i, float('-inf'), float('inf'), True, 0, empty_squares, moves)
 
             self.propose_move(best_move)
-            print(f"yes Depth: {i}, Best move: {best_move}, score: {score_move(best_move, game_state)}, {eval}, empty: {len(empty_squares)}")
+            self.best_moves.append(best_move)
+            
+            print(f"saved_ordered Depth: {i}, Best move: {best_move}, score: {score_move(best_move, game_state)}, {eval}, empty: {len(empty_squares)}")
+            
             print(datetime.datetime.now()-start)
 
 
-
-            with open('experimentsv2.0/sample_saved.txt', 'a') as f:
-                    f.write(f",{i}")
+            # WRITE LATEST  DEPTH to file
+            # with open('experimentsv2.0/sample_saved_exper.txt', 'a') as f:
+            #         f.write(f",{i}")
 
 def update_moves(all_moves: list, current_i: int, current_j: int, current_value):
     new_moves = []

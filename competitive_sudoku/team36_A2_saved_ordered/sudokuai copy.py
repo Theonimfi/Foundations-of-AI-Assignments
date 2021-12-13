@@ -123,135 +123,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                                 moves.append(Move(i, j, value))
             return moves
 
-        def minimax(game_state, depth, alpha, beta, isMaximisingPlayer, current_score, empty_squares, all_moves):
-            """
-            The minimax algorithm creates a tree with nodes that includes the current evaluation score of every
-            possible move. By applying alpha-beta pruning to minimax, its efficiency is improved by ignoring
-            calculating the evaluation score of nodes that do not affect the final solution.
-
-            @param game_state: Current Game state.
-            @param depth: The depth of the searching tree.
-            @param alpha: The value of the alpha of alpha-beta pruning.
-            @param beta: The value of the beta of alpha-beta pruning.
-            @param isMaximisingPlayer: Indicates if the player is the Max player (True) or not (False)
-            @param current_score: The current evaluation score of the game.
-            @param empty_squares: The number of empty squares.
-            """
-
-            # Return the current score if the depth level equals to 0 or if there are no other moves
-            if depth == 0 or len(all_moves) == 0:
-                return None, current_score
-
-            # Check if the player is the Max player
-            if isMaximisingPlayer:
-
-                # Add the lowest possible value in max_eval
-                max_eval = float('-inf')
-
-                for i, move in enumerate(all_moves):
-                    # print(i)
-
-                    # Get the score of the move by calling the score_move function
-                    move_score = score_move(move, game_state)
-
-                    # Add the score of the move in the current score
-                    current_score += move_score
-
-                    current_i = move.i
-                    current_j = move.j
-                    current_value = move.value
-
-                    # Remove this move from the empty squared table
-                    empty_squares.remove((move.i, move.j))
-
-                    # Add the move on the board
-                    game_state.board.put(move.i, move.j, move.value)
-
-                    new_moves = update_moves(all_moves, current_i, current_j, current_value)
-
-                    # Call the minimax function. Decrease the depth and indicate that since this player is the Max the other
-                    # player should be the Min (False). Save the result in the current_eval attribute.
-                    current_eval = minimax(game_state, depth - 1, alpha, beta, False, current_score, empty_squares, new_moves)[1]
-
-                    i = current_i
-                    j = current_j
-
-                    # Subtract the move score from current score
-                    current_score -= move_score
-
-                    # Add the move score from the empty table
-                    empty_squares.add((move.i, move.j))
-
-                    # Remove the move score from the board
-                    game_state.board.put(move.i, move.j, SudokuBoard.empty)
-
-                    # Save in max_eval and in best_move the highest evaluation score and its move respectively
-                    if float(current_eval) > max_eval:
-                        max_eval = current_eval
-                        best_move = move
-
-                    # Save the max evaluation score in alpha and if the max evaluation is larger than beta which is the min
-                    # evaluation score there is no need to investigate the tree further
-                    alpha = max(alpha, max_eval)
-                    if max_eval >= beta:
-                        break;
-
-                # Return the best move and its evaluation score
-                return best_move, max_eval
-
-            else:
-                # Add the highest possible value in max_eval
-                min_eval = float('inf')
-                for move in all_moves:
-
-                    # Get the score of the move by calling the score_move function
-                    move_score = score_move(move, game_state)
-
-                    # Subtract the score of the move in the current score
-                    current_score -= move_score
-
-                    current_i = move.i
-                    current_j = move.j
-                    current_value = move.value
-
-                    # Remove this move from the empty squared table
-                    empty_squares.remove((move.i, move.j))
-
-                    # Add the move on the board
-                    game_state.board.put(move.i, move.j, move.value)
-
-                    new_moves = update_moves(all_moves, current_i, current_j, current_value)
-
-                    # Call the minimax function. Decrease the depth and indicate that since this player is the Min the other
-                    # player should be the Max (True). Save the result in the current_eval attribute.
-                    current_eval = minimax(game_state, depth - 1, alpha, beta, True, current_score, empty_squares, new_moves)[1]
-
-                    i = current_i
-                    j = current_j
-
-                    # Add the score of the move in the current score
-                    current_score += move_score
-
-                    # Add the move score to the empty table
-                    empty_squares.add((move.i, move.j))
-
-                    # Remove the move score from the board
-                    game_state.board.put(move.i, move.j, SudokuBoard.empty)
-
-                    # Save in min_eval and in best_move the lowest evaluation score and its move respectively
-                    if float(current_eval) < min_eval:
-                        min_eval = current_eval
-                        best_move = move
-
-                    # Save the min evaluation score in beta and if the min evaluation is smaller than alpha which is the max
-                    # evaluation score there is no need to investigate the tree further
-                    beta = min(beta, min_eval)
-                    if min_eval <= alpha:
-                        break;
-
-                # Return the best move and its evaluation score
-                return best_move, min_eval
-
         #### MOVE PROPOSITIONING ###
 
         # Find all legal and non taboo moves
@@ -263,7 +134,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         start=datetime.datetime.now()
         empty_squares = set([(i, j) for i in range(N) for j in range(N) if game_state.board.get(i, j) == SudokuBoard.empty])
 
-        with open(f'experimentsv2.0/sample_saved.txt', 'a') as f:
+        with open(f'experimentsv2.0/sample_saved_exper.txt', 'a') as f:
             f.write(f'\n{len(empty_squares)},0')
         # Start with depth 1 and then increase depth. For every depth, call minimax and propose a move. The more time we have
         # the most accurate the move that the minimax returns
@@ -274,13 +145,165 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             best_move, eval = minimax(game_state, i, float('-inf'), float('inf'), True, 0, empty_squares, moves)
 
             self.propose_move(best_move)
-            print(f"yes Depth: {i}, Best move: {best_move}, score: {score_move(best_move, game_state)}, {eval}, empty: {len(empty_squares)}")
+            print(f"exper Depth: {i}, Best move: {best_move}, score: {score_move(best_move, game_state)}, {eval}, empty: {len(empty_squares)}")
             print(datetime.datetime.now()-start)
 
 
 
-            with open('experimentsv2.0/sample_saved.txt', 'a') as f:
+            with open('experimentsv2.0/sample_saved_exper.txt', 'a') as f:
                     f.write(f",{i}")
+
+
+def minimax(game_state, depth, alpha, beta, isMaximisingPlayer, current_score, empty_squares, all_moves):
+    """
+    The minimax algorithm creates a tree with nodes that includes the current evaluation score of every
+    possible move. By applying alpha-beta pruning to minimax, its efficiency is improved by ignoring
+    calculating the evaluation score of nodes that do not affect the final solution.
+
+    @param game_state: Current Game state.
+    @param depth: The depth of the searching tree.
+    @param alpha: The value of the alpha of alpha-beta pruning.
+    @param beta: The value of the beta of alpha-beta pruning.
+    @param isMaximisingPlayer: Indicates if the player is the Max player (True) or not (False)
+    @param current_score: The current evaluation score of the game.
+    @param empty_squares: The number of empty squares.
+    """
+
+    # Return the current score if the depth level equals to 0 or if there are no other moves
+    if depth == 0 or len(all_moves) == 0:
+        return None, current_score
+
+    # Check if the player is the Max player
+    if isMaximisingPlayer:
+
+        # Add the lowest possible value in max_eval
+        max_eval = float('-inf')
+
+
+        # scores = [for xscore_move(x, game_state)]
+        moves = []
+        scores = []
+        for move in all_moves:
+            score = score_move(move, game_state)
+
+
+            if score > 2:
+        
+                moves.insert(0, move)
+                scores.insert(0, score)
+
+            else:
+                moves.append(move)
+                scores.append(score)
+
+
+        # print(scores)
+
+        # all_moves = sorted(all_moves, key=lambda x: score_move(x, game_state), reverse=True)
+        all_moves = moves
+        for i, move in enumerate(all_moves):
+
+            # Get the score of the move by calling the score_move function
+            move_score = scores[i]
+
+            # Add the score of the move in the current score
+            current_score += move_score
+
+            current_i = move.i
+            current_j = move.j
+            current_value = move.value
+
+            # Remove this move from the empty squared table
+            empty_squares.remove((move.i, move.j))
+
+            # Add the move on the board
+            game_state.board.put(move.i, move.j, move.value)
+
+            new_moves = update_moves(all_moves, current_i, current_j, current_value)
+    
+            # Call the minimax function. Decrease the depth and indicate that since this player is the Max the other
+            # player should be the Min (False). Save the result in the current_eval attribute.
+            current_eval = minimax(game_state, depth - 1, alpha, beta, False, current_score, empty_squares, new_moves)[1]
+
+            i = current_i
+            j = current_j
+
+            # Subtract the move score from current score
+            current_score -= move_score
+
+            # Add the move score from the empty table
+            empty_squares.add((move.i, move.j))
+
+            # Remove the move score from the board
+            game_state.board.put(move.i, move.j, SudokuBoard.empty)
+
+            # Save in max_eval and in best_move the highest evaluation score and its move respectively
+            if float(current_eval) >= max_eval:
+                max_eval = current_eval
+                best_move = move
+
+            # Save the max evaluation score in alpha and if the max evaluation is larger than beta which is the min
+            # evaluation score there is no need to investigate the tree further
+            alpha = max(alpha, max_eval)
+
+            if max_eval >= beta:
+                break;
+        # Return the best move and its evaluation score
+        return best_move, max_eval
+
+    else:
+        # Add the highest possible value in max_eval
+        min_eval = float('inf')
+        for move in all_moves:
+
+            # Get the score of the move by calling the score_move function
+            move_score = score_move(move, game_state)
+
+            # Subtract the score of the move in the current score
+            current_score -= move_score
+
+            current_i = move.i
+            current_j = move.j
+            current_value = move.value
+
+            # Remove this move from the empty squared table
+            empty_squares.remove((move.i, move.j))
+
+            # Add the move on the board
+            game_state.board.put(move.i, move.j, move.value)
+
+            new_moves = update_moves(all_moves, current_i, current_j, current_value)
+
+            # Call the minimax function. Decrease the depth and indicate that since this player is the Min the other
+            # player should be the Max (True). Save the result in the current_eval attribute.
+            current_eval = minimax(game_state, depth - 1, alpha, beta, True, current_score, empty_squares, new_moves)[1]
+
+            i = current_i
+            j = current_j
+
+            # Add the score of the move in the current score
+            current_score += move_score
+
+            # Add the move score to the empty table
+            empty_squares.add((move.i, move.j))
+
+            # Remove the move score from the board
+            game_state.board.put(move.i, move.j, SudokuBoard.empty)
+
+            # Save in min_eval and in best_move the lowest evaluation score and its move respectively
+            if float(current_eval) <= min_eval:
+                min_eval = current_eval
+                best_move = move
+
+            # Save the min evaluation score in beta and if the min evaluation is smaller than alpha which is the max
+            # evaluation score there is no need to investigate the tree further
+
+            beta = min(beta, min_eval)
+            if min_eval <= alpha:
+                break;
+        # Return the best move and its evaluation score
+        return best_move, min_eval
+
 
 def update_moves(all_moves: list, current_i: int, current_j: int, current_value):
     new_moves = []
@@ -297,7 +320,6 @@ def update_moves(all_moves: list, current_i: int, current_j: int, current_value)
                     new_moves.append(other_move)
 
     return new_moves
-
 
 def score_move(move: Move, game_state: GameState) -> int:
     """The move scoring function calculates if a player will get contributed points

@@ -62,13 +62,18 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             @param current_score: The current evaluation score of the game.
             @param empty_squares: The number of empty squares.
             """
+
+            # Return the current score if the depth level equals to 0 or if there are no other moves
+
             # Find all legal and non taboo moves
             all_moves = [Move(i, j, value) for (i,j) in empty_squares for value in get_values(i,j) if
                          possible(i, j, value)]
-
-            # Return the current score if the depth level equals to 0 or if there are no other moves
-            if depth == 0 or len(all_moves) == 0:
+            if depth == 0:
                 return None, current_score
+
+            if len(all_moves) == 0:
+                return None, current_score
+
 
             # Check if the player is the Max player
             if isMaximisingPlayer:
@@ -76,8 +81,8 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 # Add the lowest possible value in max_eval
                 max_eval = float('-inf')
 
-                for move in all_moves:
-
+                for i, move in enumerate(all_moves):
+                    # print(f"{i}/{len(all_moves)}", depth)
                     # Get the score of the move by calling the score_move function
                     move_score = score_move(move,game_state)
 
@@ -169,15 +174,23 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         move = random.choice(all_moves)
 
         self.propose_move(move)
+        empty_squares = set([(i, j) for i in range(N) for j in range(N) if game_state.board.get(i, j) == SudokuBoard.empty])
 
+        with open(f'sample_A1.txt', 'a') as f:
+            f.write(f'\n{len(empty_squares)},0')
         # Start with depth 1 and then increase depth.
         # For every depth, call minimax and propose a move. The more time we have
         # the most accurate the move that the minimax returns
         for i in range(1, MAX_DEPTH):
-            empty_squares = set([(i, j) for i in range(N) for j in range(N) if game_state.board.get(i, j) == SudokuBoard.empty])
+            
+            if i > len(empty_squares):
+                break
             best_move, eval = minimax(game_state, i, float('-inf'), float('inf'), True, 0, empty_squares)
 
             self.propose_move(best_move)
+
+            with open('sample_A1.txt', 'a') as f:
+                    f.write(f",{i}")
 
 
 def score_move(move: Move, game_state: GameState):
