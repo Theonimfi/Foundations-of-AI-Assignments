@@ -310,8 +310,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             self.propose_move(best_move)
 
             print(f"Taboo: {len(self.taboo_moves)} Depth: {i}, Best move: {best_move}, score: {score_move(best_move, game_state)}, {eval}, empty: {len(empty_squares)}")
-            for move in self.taboo_moves:
-                print(move)
 
             if self.taboo_moves:
                 taboo_move = self.propose_taboo_move(eval, empty_squares)
