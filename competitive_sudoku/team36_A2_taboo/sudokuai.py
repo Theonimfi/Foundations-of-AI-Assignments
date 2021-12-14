@@ -341,16 +341,17 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
         # If you are play on the even (losing) side
         if len(empty_squares) % 2 == 0:
-            print("Taboo move played")
 
             if eval <= 0 and len(self.taboo_moves) % 2 != 0:
+                print("Taboo move played")
+
                 return random.choice(self.taboo_moves)
 
                     
         # If you are play on the oneven (winning) side, but there is one taboo move left
         elif len(self.taboo_moves) == 1 and eval < 3:
             taboo_move = self.taboo_moves[0]
-            alternative_moves = [move for eval, move in self.last_moves (move.i == taboo_move.i) and (move.j == taboo_move.j) and (move.value != taboo_move.value) ]
+            alternative_moves = [move for eval, move in self.last_moves if (move.i == taboo_move.i) and (move.j == taboo_move.j) and (move.value != taboo_move.value) ]
             
             print("counter taboo played")
             return random.choice(alternative_moves)
