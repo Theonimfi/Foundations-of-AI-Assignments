@@ -132,12 +132,8 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
                     # Get the score of the move by calling the score_move function
                     move_score = score_move(move, game_state)
-                    
-                    current_i = move.i
-                    current_j = move.j
-                    current_value = move.value
 
-                    new_moves = update_moves(all_moves, current_i, current_j, current_value)
+                    new_moves = update_moves(all_moves, move.i, move.j, move.value)
                     
                     # Remove this move from the empty squared table
                     empty_squares.remove((move.i, move.j))
@@ -169,9 +165,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                     # Call the minimax function. Decrease the depth and indicate that since this player is the Max the other
                     # player should be the Min (False). Save the result in the current_eval attribute.
                     current_eval = minimax(game_state, depth - 1, alpha, beta, False, current_score, empty_squares, new_moves,taboo= taboo)[1]
-
-                    i = current_i
-                    j = current_j
 
                     # Subtract the move score from current score
                     current_score -= move_score
@@ -224,14 +217,10 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 for move in all_moves:
 
 
-                    current_i = move.i
-                    current_j = move.j
-                    current_value = move.value
-  
                     # Remove this move from the empty squared table
                     empty_squares.remove((move.i, move.j))
 
-                    new_moves = update_moves(all_moves, current_i, current_j, current_value)
+                    new_moves = update_moves(all_moves, move.i, move.j, move.value)
 
                     if  taboo and unsolvable(empty_squares, new_moves):
                         taboo_count += 1
@@ -254,9 +243,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                     # Call the minimax function. Decrease the depth and indicate that since this player is the Min the other
                     # player should be the Max (True). Save the result in the current_eval attribute.
                     current_eval = minimax(game_state, depth - 1, alpha, beta, True, current_score, empty_squares, new_moves, taboo=taboo)[1]
-
-                    i = current_i
-                    j = current_j
 
                     # Add the score of the move in the current score
                     current_score += move_score
@@ -332,7 +318,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
                 if taboo_move:
                     self.propose_move(taboo_move)
-                    
+
                     break
 
             
