@@ -301,7 +301,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 break
 
             # Calculate taboo moves if you are in the end game
-            if len(empty_squares) < END_GAME and len(empty_squares) > 1 :
+            if len(empty_squares) < END_GAME and len(empty_squares) > 1 and i > 2:
                 taboo = True
             else:
                 taboo = False
@@ -348,9 +348,9 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
                     
         # If you are play on the oneven (winning) side, but there is one taboo move left
-        elif len(self.taboo_moves) == 1:
+        elif len(self.taboo_moves) == 1 and eval < 3:
             taboo_move = self.taboo_moves[0]
-            alternative_moves = [move for eval, move in self.last_moves if (eval != 7) and (move.i == taboo_move.i) and (move.j == taboo_move.j) and (move.value != taboo_move.value) ]
+            alternative_moves = [move for eval, move in self.last_moves (move.i == taboo_move.i) and (move.j == taboo_move.j) and (move.value != taboo_move.value) ]
             
             print("counter taboo played")
             return random.choice(alternative_moves)
