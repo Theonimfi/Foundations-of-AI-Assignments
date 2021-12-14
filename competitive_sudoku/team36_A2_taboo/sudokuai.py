@@ -139,6 +139,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
                     new_moves = update_moves(all_moves, current_i, current_j, current_value)
                     
+                    # Remove this move from the empty squared table
                     empty_squares.remove((move.i, move.j))
 
 
@@ -160,13 +161,11 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                     # Add the score of the move in the current score
                     current_score += move_score
 
-                    # Remove this move from the empty squared table
-                    # empty_squares.remove((move.i, move.j))
 
                     # Add the move on the board
                     game_state.board.put(move.i, move.j, move.value)
 
-
+                    
                     # Call the minimax function. Decrease the depth and indicate that since this player is the Max the other
                     # player should be the Min (False). Save the result in the current_eval attribute.
                     current_eval = minimax(game_state, depth - 1, alpha, beta, False, current_score, empty_squares, new_moves,taboo= taboo)[1]
@@ -325,41 +324,61 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             self.propose_move(best_move)
 
             print(f"Taboo: {len(self.taboo_moves)} Depth: {i}, Best move: {best_move}, score: {score_move(best_move, game_state)}, {eval}, empty: {len(empty_squares)}")
+            for move in self.taboo_moves:
+                print(move)
 
-            # Only play a taboo move when necessary
-            if len(self.taboo_moves) > 0 and self.do_taboo_move(eval, empty_squares):
-                    print("Taboo!", self.taboo_moves[0])
-                    self.propose_move(self.taboo_moves[0])
+            if self.taboo_moves:
+                taboo_move = self.propose_taboo_move(eval, empty_squares)
+
+                if taboo_move:
+                    self.propose_move(taboo_move)
+                    
                     break
-            else:
-                print("No taboo")
 
-            moves = self.update_best_ordering(eval)
+            
+            moves = self.update_best_ordering()
 
             # #WRITE LATEST  DEPTH to file
             # with open('experimentsv2.0/saved_ordered2_3x3e.txt', 'a') as f:
             #         f.write(f",{i}")
 
 
-    def update_best_ordering(self, max_eval):
+    def update_best_ordering(self):
         _, moves = zip(*sorted(self.last_moves, key=lambda x: x[0], reverse=True))
         self.last_moves = []
         
         return moves
 
 
-    def do_taboo_move(self, eval, empty_squares):
+    def propose_taboo_move(self, eval, empty_squares):
         ""
+        if len(self.taboo_moves) == 0:
+            return None
 
-        if len(self.taboo_moves) == 2 and len(empty_squares) <= END_GAME:
-            move_1 = self.taboo_moves[0]
-            move_2 = self.taboo_moves[1]      
-            if (move_1.i != move_2.i or move_1.j != move_2.j):
-                return False
+        # If you are play on the even (losing) side
+        if len(empty_squares) % 2 == 0:
+            print("Taboo move played")
 
-        eval_check = eval <= 0
+            if eval <= 0 and len(self.taboo_moves) % 2 != 0:
+                return random.choice(self.taboo_moves)
 
-        return eval_check and len(empty_squares) % 2 == 0
+                    
+        # If you are play on the oneven (winning) side, but there is one taboo move left
+        elif len(self.taboo_moves) == 1:
+            taboo_move = self.taboo_moves[0]
+            alternative_moves = [move for eval, move in self.last_moves if (eval != 7) and (move.i == taboo_move.i) and (move.j == taboo_move.j) and (move.value != taboo_move.value) ]
+            
+            print("counter taboo played")
+            return random.choice(alternative_moves)
+
+        else:
+            return None
+
+        # if len(self.taboo_moves) == 2 and len(empty_squares) <= END_GAME:
+        #     move_1 = self.taboo_moves[0]
+        #     move_2 = self.taboo_moves[1]      
+        #     if (move_1.i != move_2.i or move_1.j != move_2.j):
+        #         return False
 
 
 def update_moves(all_moves: list, current_i: int, current_j: int, current_value):
