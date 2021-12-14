@@ -20,7 +20,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         self.best_moves = []
         self.last_moves = []
 
-        self.taboo_moves=[]
+        self.taboo_moves = []
     # N.B. This is a very naive implementation.
 
     def compute_best_move(self, game_state: GameState) -> None:
