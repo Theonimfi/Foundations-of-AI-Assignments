@@ -4,9 +4,9 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 # sns.set_theme(style="ticks", palette="Set2")
-
+files=["saved_ordered_ins", "saved_ordered2"]
 max_length = 65
-for j in ["saved_exper", "saved"]:
+for j in files:
     all_depths = []
     # max_length = 0
     d = np.empty((2, 81))
@@ -14,7 +14,7 @@ for j in ["saved_exper", "saved"]:
     data = pd.DataFrame(data=d,columns=np.arange(1, 82))
 
     for i in [3]:
-        lines = np.array([list(map(int, line.split(","))) for line in open(f'./{j}_3x3e{i}.txt')])
+        lines = np.array([list(map(int, line.split(","))) for line in open(f'./{j}_3x3e.txt') if line !="\n"])
         lines = [[l[0], l[-1]] for l in lines]
 
         empty_depths = {}
@@ -51,7 +51,7 @@ plt.xlim(85, -1)# plt.yscale('symlog', subsy=[2, 3, 4, 5, 6, 7, 8, 9])
 # plt.ylim(bottom=0)
 plt.grid(True, which="both")
 plt.xlabel("empty squares left")
-plt.legend([f"version: {time}"for time in ["A2 with saved & ordering", "A2 with saved"]])
+plt.legend([f"version: {time}"for time in files])
 plt.ylim(-.5)
 plt.show()
 

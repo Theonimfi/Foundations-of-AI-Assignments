@@ -19,6 +19,8 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
         self.best_moves = []
         self.last_moves = []
+
+        self.taboo_moves=[]
     # N.B. This is a very naive implementation.
 
     def compute_best_move(self, game_state: GameState) -> None:
@@ -124,7 +126,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                                 moves.append(Move(i, j, value))
             return moves
 
-        def minimax(game_state, depth, alpha, beta, isMaximisingPlayer, current_score, empty_squares, all_moves):
+        def minimax(game_state: GameState, depth: int, alpha: float, beta: float, isMaximisingPlayer: bool, current_score: int, empty_squares: list, all_moves: list, initial=False):
             """
             The minimax algorithm creates a tree with nodes that includes the current evaluation score of every
             possible move. By applying alpha-beta pruning to minimax, its efficiency is improved by ignoring
@@ -169,6 +171,9 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
                     new_moves = update_moves(all_moves, current_i, current_j, current_value)
 
+                    if new_moves == []:
+                        self.taboo_moves.append(move)
+
                     # Call the minimax function. Decrease the depth and indicate that since this player is the Max the other
                     # player should be the Min (False). Save the result in the current_eval attribute.
                     current_eval = minimax(game_state, depth - 1, alpha, beta, False, current_score, empty_squares, new_moves)[1]
@@ -190,19 +195,24 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                         max_eval = current_eval
                         best_move = move
 
-                        self.last_moves.append([current_eval,move])
-                        
 
                     # Save the max evaluation score in alpha and if the max evaluation is larger than beta which is the min
                     # evaluation score there is no need to investigate the tree further
                     alpha = max(alpha, max_eval)
                     if max_eval >= beta:
+                        if initial:
+                            self.last_moves.append([current_eval,move])
+                        
                         break;
+                    if initial:
+                        self.last_moves.append([current_eval,move])
+                        
 
                 # Return the best move and its evaluation score
                 return best_move, max_eval
 
             else:
+                
                 # Add the highest possible value in max_eval
                 min_eval = float('inf')
                 for move in all_moves:
@@ -272,46 +282,39 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
         empty_squares = set([(i, j) for i in range(N) for j in range(N) if game_state.board.get(i, j) == SudokuBoard.empty])
 
-        # Start writing depth to file
-        # with open(f'experimentsv2.0/sample_saved_exper.txt', 'a') as f:
-        #     f.write(f'\n{len(empty_squares)},0')
-
         import datetime
-        start=datetime.datetime.now()
 
 
         # Start with depth 1 and then increase depth. For every depth, call minimax and propose a move. The more time we have
         # the most accurate the move that the minimax returns
         for i in range(1, MAX_DEPTH):
-
-            # @TODO Order to insert best moves before
-            print(self.last_moves)
-            for move in self.best_moves:
-                moves.remove(move)
-                moves.insert(0, move)
+            start=datetime.datetime.now()
 
             if i > len(empty_squares):
                 break
             
-            best_move, eval = minimax(game_state, i, float('-inf'), float('inf'), True, 0, empty_squares, moves)
+            best_move, eval = minimax(game_state, i, float('-inf'), float('inf'), True, 0, empty_squares, moves, True)
 
             self.propose_move(best_move)
             self.best_moves.append(best_move)
+
+            moves = self.update_best_ordering(eval)
             
+
             print(f"saved_ordered Depth: {i}, Best move: {best_move}, score: {score_move(best_move, game_state)}, {eval}, empty: {len(empty_squares)}")
             
             print(datetime.datetime.now()-start)
 
 
-            # WRITE LATEST  DEPTH to file
-            # with open('experimentsv2.0/sample_saved_exper.txt', 'a') as f:
+            # #WRITE LATEST  DEPTH to file
+            # with open('experimentsv2.0/saved_ordered2_3x3e.txt', 'a') as f:
             #         f.write(f",{i}")
 
 
-    def update_best_moves(self, max_eval):
-
-        fo
-
+    def update_best_ordering(self, max_eval):
+        _, moves = zip(*sorted(self.last_moves, key=lambda x: x[0], reverse=True))
+        self.last_moves = []
+        return moves
 
 def update_moves(all_moves: list, current_i: int, current_j: int, current_value):
     new_moves = []
