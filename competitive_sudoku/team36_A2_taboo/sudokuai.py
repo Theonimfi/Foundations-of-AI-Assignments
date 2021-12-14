@@ -138,13 +138,11 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                     # Remove this move from the empty squared table
                     empty_squares.remove((move.i, move.j))
 
-
-                    if  taboo and unsolvable(empty_squares, new_moves):
+                    if taboo and unsolvable(empty_squares, new_moves):
                         
                         if initial:
                             if move not in self.taboo_moves:
                                 self.taboo_moves.append(move)
-
 
                         else:
                             taboo_count += 1
@@ -176,7 +174,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                     game_state.board.put(move.i, move.j, SudokuBoard.empty)
                     if initial:
                         self.last_moves.append([current_eval,move])
-                        
 
                     if float(current_eval) == 999:
                         taboo_count += 1
@@ -227,7 +224,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                         empty_squares.add((move.i, move.j))
 
                         continue
-
 
                     # Get the score of the move by calling the score_move function
                     move_score = score_move(move, game_state)
@@ -281,7 +277,10 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
         # Find all legal and non taboo moves
         all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in get_values(i,j) if possible(i, j, value)]
-        
+
+        # Propose a random move first in case there is no time to implement minimax.
+        move = random.choice(all_moves)
+        self.propose_move(move)
         
         # @TODO Initial ordering based on if three completions can be made
         moves = []
@@ -390,11 +389,10 @@ def update_moves(all_moves: list, current_i: int, current_j: int, current_value)
 def unsolvable(empty_squares, moves):
     """
         Check if any empty square does not have any moves to be made
-
     """
     
     for square_i, square_j in empty_squares:
-        solutions =  0
+        solutions = 0
         
         for move in moves:
 
@@ -403,7 +401,7 @@ def unsolvable(empty_squares, moves):
                 solutions += 1
     # print(e)
         if solutions == 0:
-            return  True
+            return True
 
     return False
 
