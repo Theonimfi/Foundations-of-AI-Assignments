@@ -277,7 +277,10 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
         # Find all legal and non taboo moves
         all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in get_values(i,j) if possible(i, j, value)]
-        
+
+        # Propose a random move first in case there is no time to implement minimax.
+        move = random.choice(all_moves)
+        self.propose_move(move)
         
         # @TODO Initial ordering based on if three completions can be made
         moves = []
