@@ -255,15 +255,15 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         #### MOVE PROPOSITIONING ###
 
         # Find all legal and non taboo moves
-        all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in get_values(i,j) if possible(i, j, value)]
-
+        # all_moves = [Move(i, j, value) for i in range(N) for j in range(N) for value in get_values(i,j) if possible(i, j, value)]
+        all_moves = get_moves(N, game_state)
         moves = all_moves
 
         import datetime
-        start=datetime.datetime.now()
+        start = datetime.datetime.now()
         empty_squares = set([(i, j) for i in range(N) for j in range(N) if game_state.board.get(i, j) == SudokuBoard.empty])
 
-        with open(f'experimentsv2.0/sample_saved.txt', 'a') as f:
+        with open(f'experimentsv2.0/sample_saved.txt', 'a+') as f:
             f.write(f'\n{len(empty_squares)},0')
         # Start with depth 1 and then increase depth. For every depth, call minimax and propose a move. The more time we have
         # the most accurate the move that the minimax returns
@@ -277,16 +277,15 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             print(f"yes Depth: {i}, Best move: {best_move}, score: {score_move(best_move, game_state)}, {eval}, empty: {len(empty_squares)}")
             print(datetime.datetime.now()-start)
 
+            with open('experimentsv2.0/sample_saved.txt', 'a+') as f:
+                f.write(f",{i}")
 
-
-            with open('experimentsv2.0/sample_saved.txt', 'a') as f:
-                    f.write(f",{i}")
 
 def update_moves(all_moves: list, current_i: int, current_j: int, current_value):
     new_moves = []
 
     for other_move in all_moves:
-        if (other_move.i,other_move.j) != (current_i, current_j):
+        if (other_move.i, other_move.j) != (current_i, current_j):
 
             if other_move.i != current_i and other_move.j != current_j:
                 new_moves.append(other_move)
