@@ -63,9 +63,9 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             
             self.propose_move(best_move)
 
-            print(
-                f"Taboo: {len(self.taboo_moves)} Depth: {i}, Best move: {best_move}, score: {score_move(best_move, game_state)}, {eval}, empty: {len(empty_squares)}"
-            )
+            # print(
+            #     f"Taboo: {len(self.taboo_moves)} Depth: {i}, Best move: {best_move}, score: {score_move(best_move, game_state)}, {eval}, empty: {len(empty_squares)}"
+            # )
 
             # Determine if taboo move should be made and propose it.
             if self.taboo_moves:
@@ -78,6 +78,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
             # Update ordering on last turns evaluation
             moves = self.update_best_ordering()
+
 
     def possible(self, i, j, value, game_state):
         """
@@ -337,56 +338,26 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         if len(empty_squares) % 2 == 0:
 
             if eval <= 0 and len(self.taboo_moves) % 2 != 0:
-                print("Taboo move played")
+                # print("Taboo move played")
 
                 return random.choice(self.taboo_moves)
 
         # If you are play on the oneven (winning) side, but there is one taboo move left
         elif len(self.taboo_moves) == 1 and eval < 3:
             taboo_move = self.taboo_moves[0]
-            alternative_moves = [
-                move
-                for eval, move in self.last_moves
-                if (move.i == taboo_move.i)
-                and (move.j == taboo_move.j)
-                and (move.value != taboo_move.value)
+            alternative_moves = [move for eval, move in self.last_moves
+                if (move.i == taboo_move.i) and (move.j == taboo_move.j) and (move.value != taboo_move.value)
             ]
 
-            print("counter taboo played")
+            # print("counter taboo played")
             return random.choice(alternative_moves)
 
         else:
             return None
 
-def completions(i, j, game_state: GameState):
-    """
-    Returns true if a move completes a row a column and a block.
-
-    @param i: Row coordinate of the move
-    @param j: Column coordinate of the move
-    @param game_state: Current state of the game
-    """
-    
-    complete_row = len(get_row(i, game_state)) == game_state.board.N - 1
-    complete_column = len(get_column(j, game_state)) == game_state.board.N - 1
-    complete_box = len(get_block(i, j, game_state)) == game_state.board.N - 1
-
-    return complete_row, complete_column, complete_box
-
-def three_completions(i, j, game_state: GameState):
-    """
-    Returns true if a move completes a row a column and a block.
-
-    @param i: Row coordinate of the move
-    @param j: Column coordinate of the move
-    @param game_state: Current state of the game
-    """
-    complete_row, complete_column, complete_box = completions(i, j, game_state)
-
-    if complete_row and complete_column and complete_box:
-        return True
-    else:
-        return False
+######                                    ######
+#       INFORMATION ON THE MOVES               #
+######                                    ######
 
 def update_moves(all_moves: list, current_i: int, current_j: int, current_value):
     """
@@ -464,6 +435,39 @@ def score_move(move: Move, game_state: GameState) -> int:
         score += 1
     return score
 
+######                                    ######
+#       INFORMATION ON THE BOARD STATUS        #
+######                                    ######
+
+def completions(i, j, game_state: GameState):
+    """
+    Returns true if a move completes a row a column and a block.
+
+    @param i: Row coordinate of the move
+    @param j: Column coordinate of the move
+    @param game_state: Current state of the game
+    """
+    
+    complete_row = len(get_row(i, game_state)) == game_state.board.N - 1
+    complete_column = len(get_column(j, game_state)) == game_state.board.N - 1
+    complete_box = len(get_block(i, j, game_state)) == game_state.board.N - 1
+
+    return complete_row, complete_column, complete_box
+
+def three_completions(i, j, game_state: GameState):
+    """
+    Returns true if a move completes a row a column and a block.
+
+    @param i: Row coordinate of the move
+    @param j: Column coordinate of the move
+    @param game_state: Current state of the game
+    """
+    complete_row, complete_column, complete_box = completions(i, j, game_state)
+
+    if complete_row and complete_column and complete_box:
+        return True
+    else:
+        return False
 
 def get_surrounding_values(i: int, j: int, game_state: GameState):
     """
