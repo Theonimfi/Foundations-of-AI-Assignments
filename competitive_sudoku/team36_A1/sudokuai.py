@@ -176,8 +176,8 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         self.propose_move(move)
         empty_squares = set([(i, j) for i in range(N) for j in range(N) if game_state.board.get(i, j) == SudokuBoard.empty])
 
-        with open(f'sample_A1.txt', 'a') as f:
-            f.write(f'\n{len(empty_squares)},0')
+        # with open(f'sample_A1.txt', 'a') as f:
+        #     f.write(f'\n{len(empty_squares)},0')
         # Start with depth 1 and then increase depth.
         # For every depth, call minimax and propose a move. The more time we have
         # the most accurate the move that the minimax returns
@@ -188,9 +188,10 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             best_move, eval = minimax(game_state, i, float('-inf'), float('inf'), True, 0, empty_squares)
 
             self.propose_move(best_move)
+            print(f"Empty squares: {len(empty_squares)}, Eval: {eval}, Depth: {i}")
 
-            with open('sample_A1.txt', 'a') as f:
-                    f.write(f",{i}")
+            # with open('sample_A1.txt', 'a') as f:
+            #         f.write(f",{i}")
 
 
 def score_move(move: Move, game_state: GameState):
