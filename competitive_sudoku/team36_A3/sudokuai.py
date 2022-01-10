@@ -37,7 +37,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         self.propose_move(move)
 
         # Call monte_carlo function with 900 number of iterations, to find the best move.
-        self.monte_carlo(game_state, game_state, all_moves, float("-inf"), True, [], all_moves[0], 900, 1)
+        self.monte_carlo(game_state, game_state, all_moves, float("-inf"), True, [], all_moves[0], 900, 1, 0)
 
 
     def possible(self, i, j, value, game_state):
@@ -81,7 +81,8 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         evaluations,
         initial_move,
         iterations,
-        start
+        start,
+        move_score
     ):
         """
         The monte_carlo function searches for the best move by simulating the game. For every possible move, it completes
@@ -97,6 +98,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         @param initial_move: The move that the agent chose.
         @param iterations: The number of game simulations.
         @param start: Indicates which turn is it.
+        @param move_score: Keeps track of the score.
         """
         # If there are no more iterations or moves return
         if iterations == 0 or len(all_moves) == 0:
@@ -163,7 +165,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             gameCopy.board.put(best_move.i, best_move.j, best_move.value)
             updated_moves = update_moves(all_moves, best_move.i, best_move.j, best_move.value)
             self.propose_move(best_move)
-            self.monte_carlo(gameCopy, game_state, updated_moves,max_score,False,evaluations, initial_move , iterations, start)
+            self.monte_carlo(gameCopy, game_state, updated_moves,max_score,False,evaluations, initial_move , iterations, start, max_score)
         else:
             # If it's not the first round propose then if there is a max score then call again the monte carlo function
             # otherwise, find a move with the highest score and call again monte carlo function
@@ -172,7 +174,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 gameCopy.board.put(best_move.i, best_move.j, best_move.value)
                 updated_moves = update_moves(all_moves, best_move.i, best_move.j, best_move.value)
                 self.propose_move(initial_move)
-                self.monte_carlo(gameCopy, initial_game_state, updated_moves, max_score, False, evaluations, initial_move, iterations, start)
+                self.monte_carlo(gameCopy, initial_game_state, updated_moves, max_score, False, evaluations, initial_move, iterations, start, round_max_score)
             else:
                 for index, item in enumerate(evaluations):
                     itemlist = list(item)
@@ -195,7 +197,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
                 # Propose the new best move that the agent founds
                 self.propose_move(new_best_move)
-                self.monte_carlo(gameCopy, initial_game_state, updated_moves, max_score, False, evaluations, new_best_move, iterations, 1)
+                self.monte_carlo(gameCopy, initial_game_state, updated_moves, max_score, False, evaluations, new_best_move, iterations, 1, new_max_score)
 
 ######                                    ######
 #       INFORMATION ON THE MOVES               #
