@@ -154,10 +154,10 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 if move_score > max_score:
                     max_score = move_score
                     best_move = move
-                    found_max_score = True
             else:
                 if move_score > round_max_score:
                     round_max_score = move_score
+                    found_max_score = True
 
         # If it's the first round propose the best move and call again the monte carlo function for another
         # game simulation
@@ -174,6 +174,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
             if found_max_score:
                 gameCopy = game_state
+                best_move = initial_move
                 gameCopy.board.put(best_move.i, best_move.j, best_move.value)
                 updated_moves = update_moves(all_moves, best_move.i, best_move.j, best_move.value)
                 self.propose_move(initial_move)
