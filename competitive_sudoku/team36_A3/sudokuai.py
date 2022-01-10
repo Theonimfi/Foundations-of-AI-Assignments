@@ -128,7 +128,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         # game is the first round then save all scores and moves in the evaluations list and save also the best move
         # with thw highest score. If the game is not the first round then save the highest score of this round
         for move in all_moves:
-            move_score = 0
             gameCopy = game_state
             if isa3agent:
                 move_score = move_score + score_move(move,gameCopy)
