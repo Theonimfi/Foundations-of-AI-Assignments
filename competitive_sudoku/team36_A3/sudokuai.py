@@ -100,12 +100,14 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         @param start: Indicates which turn is it.
         @param move_score: Keeps track of the score.
         """
+
         # If there are no more iterations or moves return
         if iterations == 0 or len(all_moves) == 0:
             return
 
         # Reduce number of iterations
         iterations = iterations - 1
+        print(iterations)
 
         # If no max score is found then found_max_score remains False
         found_max_score = False
@@ -136,7 +138,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 isotheragent = False
             gameCopy.board.put(move.i, move.j, move.value)
             nextMoves = update_moves(all_moves, move.i, move.j, move.value)
-            while nextMoves != []:
+            while nextMoves:
                 next_random_move = random.choice(nextMoves)
                 if isotheragent:
                     move_score = move_score - score_move(next_random_move, gameCopy)
@@ -146,6 +148,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                     isotheragent = True
                 gameCopy.board.put(next_random_move.i, next_random_move.j, next_random_move.value)
                 nextMoves = update_moves(nextMoves, next_random_move.i, next_random_move.j, next_random_move.value)
+                # print("played a random move")
 
             if firstRound:
                 evaluations.append((move, move_score))
@@ -169,6 +172,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         else:
             # If it's not the first round propose then if there is a max score then call again the monte carlo function
             # otherwise, find a move with the highest score and call again monte carlo function
+
             if found_max_score:
                 gameCopy = game_state
                 gameCopy.board.put(best_move.i, best_move.j, best_move.value)
