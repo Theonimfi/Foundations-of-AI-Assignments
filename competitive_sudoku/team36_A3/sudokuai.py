@@ -152,7 +152,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 if move_score > max_score:
                     max_score = move_score
                     best_move = move
-                    found_max_score = False
+                    found_max_score = True
             else:
                 if move_score > round_max_score:
                     round_max_score = move_score
