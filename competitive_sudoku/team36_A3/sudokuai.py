@@ -3,11 +3,11 @@
 #  https://www.gnu.org/licenses/gpl-3.0.txt)
 
 import random
-import numpy as np
+
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard, TabooMove
 import competitive_sudoku.sudokuai
 
-import datetime
+
 MAX_DEPTH = 50
 END_GAME = 21
 
@@ -28,60 +28,16 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
         N = game_state.board.N
 
-        self.board = np.reshape(game_state.board.squares, (N,N) )
-
         # Find all legal and non taboo moves
-        all_moves = np.array([Move(i, j, value) for i in range(N) for j in range(N) 
-                     for value in self.get_values(i, j, game_state) if self.possible(i, j, value, game_state)
-                    ])
-
+        all_moves = [Move(i, j, value) for i in range(N) for j in range(N) 
+                     for value in self.get_values(i, j, game_state) if self.possible(i, j, value, game_state)]
 
         # Propose a random move first in case there is no time to implement minimax.
         move = random.choice(all_moves)
         self.propose_move(move)
 
-        # Initial ordering based on if three completions can be made
-        moves = []
-        for move in all_moves:
-            if three_completions(move.i, move.j, game_state, self.board):
-                moves.insert(0, move)
-            else:
-                moves.append(move)
-        moves = moves
-        empty_squares = set([(i, j) for i in range(N) for j in range(N) if self.board[i, j] == SudokuBoard.empty])
-
-        # Start with depth 1 and then increase depth. For every depth, call minimax and propose a move. The more time we have
-        # the most accurate the move that the minimax returns
-        for i in range(1, MAX_DEPTH):
-            if i > len(empty_squares):
-                break
-            start = datetime.datetime.now()
-            # Calculate taboo moves if you are in the end game
-            if len(empty_squares) < END_GAME and i > 2:
-                taboo = True
-            else:
-                taboo = False
-
-            best_move, eval = self.minimax(game_state, i, float("-inf"), float("inf"), True, 0, empty_squares, moves, True, taboo)
-            
-            self.propose_move(best_move)
-
-            print(
-                f"3 Taboo: {len(self.taboo_moves)} Depth: {i}, Best move: {best_move}, score: {score_move(best_move, game_state, self.board)}, {eval}, empty: {len(empty_squares)}"
-            )
-            print(datetime.datetime.now()-start)
-
-            # Determine if taboo move should be made and propose it.
-            if self.taboo_moves:
-                taboo_move = self.propose_taboo_move(eval, empty_squares)
-
-                if taboo_move:
-                    self.propose_move(taboo_move)
-
-                    break
-
-            # Update ordering on last turns evaluation
-            moves = self.update_best_ordering()
+        # Call monte_carlo function with 900 number of iterations, to find the best move.
+        self.monte_carlo(game_state, game_state, all_moves, float("-inf"), True, [], all_moves[0], 900, 1, 0)
 
 
     def possible(self, i, j, value, game_state):
@@ -95,7 +51,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         """
 
         not_taboo = (
-            self.board[i, j] == SudokuBoard.empty
+            game_state.board.get(i, j) == SudokuBoard.empty
             and not TabooMove(i, j, value) in game_state.taboo_moves
         )
 
@@ -111,286 +67,147 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
         N = game_state.board.N
 
-        values = get_surrounding_values(i, j, game_state, self.board)
+        values = get_surrounding_values(i, j, game_state)
 
         return [value for value in range(1, N + 1) if value not in values]
 
-
-
-    def minimax(
+    def monte_carlo(
         self,
         game_state: GameState,
-        depth: int,
-        alpha: float,
-        beta: float,
-        isMaximisingPlayer: bool,
-        current_score: int,
-        empty_squares: list,
-        all_moves: list,
-        initial=False,
-        taboo=False,
+        initial_game_state: GameState,
+        all_moves,
+        max_score,
+        firstRound,
+        evaluations,
+        initial_move,
+        iterations,
+        start,
+        move_score
     ):
         """
-        The minimax algorithm creates a tree with nodes that includes the current evaluation score of every
-        possible move. By applying alpha-beta pruning to minimax, its efficiency is improved by ignoring
-        calculating the evaluation score of nodes that do not affect the final solution.
+        The monte_carlo function searches for the best move by simulating the game. For every possible move, it completes
+        the game randomly and it calculates the score. Then it keeps the move with the best score. If this move turns out to
+        be worst move than others in another game simulation, then it goes back and it gets another better move.
 
         @param game_state: Current Game state.
-        @param depth: The depth of the searching tree.
-        @param alpha: The value of the alpha of alpha-beta pruning.
-        @param beta: The value of the beta of alpha-beta pruning.
-        @param isMaximisingPlayer: Indicates if the player is the Max player (True) or not (False)
-        @param current_score: The current evaluation score of the game.
-        @param empty_squares: The number of empty squares.
+        @param initial_game_state: Initial Game state.
         @param all_moves: List of all moves that needs investigation.
-        @param initial: Indicates if it's the initial state of the game or not.
-        @param taboo: Indicates if it's taboo move or not.
+        @param max_score: The max score.
+        @param firstRound: True if it's agent's first turn False if its the game simulation.
+        @param evaluations: Includes tuples with each moves and their scores.
+        @param initial_move: The move that the agent chose.
+        @param iterations: The number of game simulations.
+        @param start: Indicates which turn is it.
+        @param move_score: Keeps track of the score.
         """
-        # Return the current score if the depth level equals to 0 or if there are no other moves
-        if depth == 0 or len(all_moves) == 0:
-            return None, current_score
 
-        taboo_count = 0
+        # If there are no more iterations or moves return
+        if iterations == 0 or len(all_moves) == 0:
+            return
 
+        # Reduce number of iterations
+        iterations = iterations - 1
+        print(iterations)
 
-        # Check if the player is the Max player
-        if isMaximisingPlayer:
+        # If no max score is found then found_max_score remains False
+        found_max_score = False
 
-            # Add the lowest possible value in max_eval
-            max_eval = float("-inf")
+        # The round's max score
+        round_max_score = float("-inf")
 
-            all_moves1 = all_moves
-
-            # if initial:
-            #     print(int(len(all_moves)*0.75))
-            #     all_moves1 = all_moves[:int(len(all_moves)*0.75)]
-            # print(self.board)
-
-            for move in all_moves1:
-                start1 = datetime.datetime.now()
-
-                # Get the score of the move by calling the score_move function
-                move_score = score_move(move, game_state, self.board)
-
-                # Update moves
-                new_moves = update_moves(all_moves, move.i, move.j, move.value)
-
-                # Remove this move from the empty squared table
-                empty_squares.remove((move.i, move.j))
-
-                if taboo and unsolvable(empty_squares, new_moves):
-
-                    if initial:
-                        if move not in self.taboo_moves:
-                            self.taboo_moves.append(move)
-
-                    else:
-                        taboo_count += 1
-
-                    empty_squares.add((move.i, move.j))
-
-                    continue
-
-                # Add the score of the move in the current score
-                current_score += move_score
-
-                # Add the move on the board
-                # start = datetime.datetime.now()
-
-                self.board[move.i, move.j] = move.value
-                # print((datetime.datetime.now()-start)*100)
-                # start = datetime.datetime.now()
-
-                # game_state.board.put(move.i, move.j, move.value)
-                
-                # print((datetime.datetime.now()-start1))
-                # print((datetime.datetime.now()-start)*100)
-                # print()
-
-                # Call the minimax function. Decrease the depth and indicate that since this player is the Max the other
-                # player should be the Min (False). Save the result in the current_eval attribute.
-                current_eval = self.minimax(
-                    game_state,
-                    depth - 1,
-                    alpha,
-                    beta,
-                    False,
-                    current_score,
-                    empty_squares,
-                    new_moves,
-                    taboo=taboo,
-                )[1]
-       
-                # Subtract the move score from current score
-                current_score -= move_score
-
-                # Add the move score from the empty table
-                empty_squares.add((move.i, move.j))
-
-                # Remove the move score from the board
-                self.board[move.i, move.j] = SudokuBoard.empty
-
-                # game_state.board.put(move.i, move.j, SudokuBoard.empty)
-                
-                if initial:
-                    self.last_moves.append([current_eval, move])
-
-                if float(current_eval) == 999:
-                    taboo_count += 1
-
-                    if initial:
-                        self.taboo_moves.append(move)
-
-                    continue
-
-                # Save in max_eval and in best_move the highest evaluation score and its move respectively
-                if float(current_eval) > max_eval:
-                    max_eval = current_eval
-                    best_move = move
-
-                # Save the max evaluation score in alpha and if the max evaluation is larger than beta which is the min
-                # evaluation score there is no need to investigate the tree further
-                alpha = max(alpha, max_eval)
-
-                if max_eval >= beta:
-                    if initial:
-                        self.last_moves.append([current_eval, move])
-                    break
-
-            if taboo_count == len(all_moves):
-                return None, 999
-
-            # Return the best move and its evaluation score
-            return best_move, max_eval
-
+        # If start mod 2 is zero then the current agent is not our a3 agent
+        if start % 2 == 0:
+            isa3agent = False
         else:
+            isa3agent = True
 
-            # Add the highest possible value in max_eval
-            min_eval = float("inf")
+        # Increase start value
+        start = start + 1
 
-            for move in all_moves:
+        # For every possible move, complete the game randomly and calculate the score of every game. If the
+        # game is the first round then save all scores and moves in the evaluations list and save also the best move
+        # with thw highest score. If the game is not the first round then save the highest score of this round
+        for move in all_moves:
+            move_score = 0
+            gameCopy = game_state
+            if isa3agent:
+                move_score = move_score + score_move(move,gameCopy)
+                isotheragent = True
+            else:
+                move_score = move_score - score_move(move, gameCopy)
+                isotheragent = False
+            gameCopy.board.put(move.i, move.j, move.value)
+            nextMoves = update_moves(all_moves, move.i, move.j, move.value)
+            while nextMoves:
+                next_random_move = random.choice(nextMoves)
+                if isotheragent:
+                    move_score = move_score - score_move(next_random_move, gameCopy)
+                    isotheragent = False
+                else:
+                    move_score = move_score + score_move(next_random_move, gameCopy)
+                    isotheragent = True
+                gameCopy.board.put(next_random_move.i, next_random_move.j, next_random_move.value)
+                nextMoves = update_moves(nextMoves, next_random_move.i, next_random_move.j, next_random_move.value)
+                # print("played a random move")
 
-                # Remove this move from the empty squared table
-                empty_squares.remove((move.i, move.j))
-
-                # Update moves
-                new_moves = update_moves(all_moves, move.i, move.j, move.value)
-
-                if taboo and unsolvable(empty_squares, new_moves):
-                    taboo_count += 1
-                    empty_squares.add((move.i, move.j))
-
-                    continue
-
-                # Get the score of the move by calling the score_move function
-                move_score = score_move(move, game_state, self.board)
-
-                # Subtract the score of the move in the current score
-                current_score -= move_score
-
-                # Add the move on the board
-                # game_state.board.put(move.i, move.j, move.value)
-                self.board[move.i, move.j] =  move.value
-
-
-                # Call the minimax function. Decrease the depth and indicate that since this player is the Min the other
-                # player should be the Max (True). Save the result in the current_eval attribute.
-                current_eval = self.minimax(
-                    game_state,
-                    depth - 1,
-                    alpha,
-                    beta,
-                    True,
-                    current_score,
-                    empty_squares,
-                    new_moves,
-                    taboo=taboo,
-                )[1]
-
-                # Add the score of the move in the current score
-                current_score += move_score
-
-                # Add the move score to the empty table
-                empty_squares.add((move.i, move.j))
-
-                # Remove the move score from the board
-                # game_state.board.put(move.i, move.j, SudokuBoard.empty)
-                self.board[move.i, move.j] = SudokuBoard.empty
-
-                if float(current_eval) == 999:
-                    taboo_count += 1
-                    continue
-
-                # Save in min_eval and in best_move the lowest evaluation score and its move respectively
-                if float(current_eval) < min_eval:
-                    min_eval = current_eval
+            if firstRound:
+                evaluations.append((move, move_score))
+                if move_score > max_score:
+                    max_score = move_score
                     best_move = move
+                    found_max_score = True
+            else:
+                if move_score > round_max_score:
+                    round_max_score = move_score
 
-                # Save the min evaluation score in beta and if the min evaluation is smaller than alpha which is the max
-                # evaluation score there is no need to investigate the tree further
-                beta = min(beta, min_eval)
-                if min_eval <= alpha:
-                    break
-
-            # If there
-
-            if taboo_count == len(all_moves):
-                return None, 999
-
-            # Return the best move and its evaluation score
-            return best_move, min_eval
-
-
-    def update_best_ordering(self):
-        """ 
-        Orders the move based on the evaluation of the previous iteration.
-
-        """
-
-
-        _, moves = zip(*sorted(self.last_moves, key=lambda x: x[0], reverse=True))
-        self.last_moves = []
-
-        return moves
-
-    def propose_taboo_move(self, eval, empty_squares):
-        """
-        Determines if a (counter) taboo move should be made and which move
-        is best.
-
-        @param eval: Evaluation of the best current move
-        @param empty_squares: Squares that are currently empty on the board  
-        
-        """
-        if len(self.taboo_moves) == 0:
-            return None
-
-        # If you are play on the even (losing) side
-        if len(empty_squares) % 2 == 0:
-
-            if eval <= 0 and len(self.taboo_moves) % 2 != 0:
-                # print("Taboo move played")
-
-                return random.choice(self.taboo_moves)
-
-        # If you are play on the oneven (winning) side, but there is one taboo move left
-        elif len(self.taboo_moves) == 1 and eval < 3:
-            taboo_move = self.taboo_moves[0]
-            alternative_moves = [move for eval, move in self.last_moves
-                if (move.i == taboo_move.i) and (move.j == taboo_move.j) and (move.value != taboo_move.value)
-            ]
-
-            # print("counter taboo played")
-            return random.choice(alternative_moves)
-
+        # If it's the first round propose the best move and call again the monte carlo function for another
+        # game simulation
+        if firstRound:
+            gameCopy = game_state
+            initial_move = best_move
+            gameCopy.board.put(best_move.i, best_move.j, best_move.value)
+            updated_moves = update_moves(all_moves, best_move.i, best_move.j, best_move.value)
+            self.propose_move(best_move)
+            self.monte_carlo(gameCopy, game_state, updated_moves,max_score,False,evaluations, initial_move , iterations, start, max_score)
         else:
-            return None
+            # If it's not the first round propose then if there is a max score then call again the monte carlo function
+            # otherwise, find a move with the highest score and call again monte carlo function
+
+            if found_max_score:
+                gameCopy = game_state
+                gameCopy.board.put(best_move.i, best_move.j, best_move.value)
+                updated_moves = update_moves(all_moves, best_move.i, best_move.j, best_move.value)
+                self.propose_move(initial_move)
+                self.monte_carlo(gameCopy, initial_game_state, updated_moves, max_score, False, evaluations, initial_move, iterations, start, round_max_score)
+            else:
+                for index, item in enumerate(evaluations):
+                    itemlist = list(item)
+                    if itemlist[0] == initial_move:
+                        itemlist[1] = round_max_score
+                        item = tuple(itemlist)
+                        evaluations[index] = item
+                        break;
+
+                new_max_score = round_max_score
+                new_best_move = initial_move
+                for move, score in evaluations:
+                    if score > new_max_score:
+                        new_max_score = score
+                        new_best_move = move
+
+                gameCopy = initial_game_state
+                gameCopy.board.put(new_best_move.i, new_best_move.j, new_best_move.value)
+                updated_moves = update_moves(all_moves, new_best_move.i, new_best_move.j, new_best_move.value)
+
+                # Propose the new best move that the agent founds
+                self.propose_move(new_best_move)
+                self.monte_carlo(gameCopy, initial_game_state, updated_moves, max_score, False, evaluations, new_best_move, iterations, 1, new_max_score)
 
 ######                                    ######
 #       INFORMATION ON THE MOVES               #
 ######                                    ######
 
-def update_moves(all_moves, current_i: int, current_j: int, current_value):
+def update_moves(all_moves: list, current_i: int, current_j: int, current_value):
     """
     Updates the list of moves by creating a new list that doesn't include the illegal moves that are
     generated after applying a move.
@@ -419,29 +236,7 @@ def update_moves(all_moves, current_i: int, current_j: int, current_value):
     return new_moves
 
 
-def unsolvable(empty_squares, moves):
-    """
-    Check if any empty square does not have any moves to be made
-
-    @param empty_squares: List of empty squares
-    @param moves: List of moves
-    """
-
-    for square_i, square_j in empty_squares:
-        solutions = 0
-
-        for move in moves:
-
-            if move.i == square_i and move.j == square_j:
-                solutions += 1
-
-        if solutions == 0:
-            return True
-
-    return False
-
-
-def score_move(move: Move, game_state: GameState, board) -> int:
+def score_move(move: Move, game_state: GameState) -> int:
     """The move scoring function calculates if a player will get contributed points
     for a given move. If either a block, column or row is completed 1 point is awarded
     if two of these are completed 3 points are awarded if all are completed 7 points.
@@ -454,7 +249,7 @@ def score_move(move: Move, game_state: GameState, board) -> int:
             score (int): the score of the move to be played
     """
     score = 0
-    complete_row, complete_column, complete_box = completions(move.i, move.j , game_state, board)
+    complete_row, complete_column, complete_box = completions(move.i, move.j , game_state)
 
     if complete_row and complete_column and complete_box:
         score += 7
@@ -470,7 +265,7 @@ def score_move(move: Move, game_state: GameState, board) -> int:
 #       INFORMATION ON THE BOARD STATUS        #
 ######                                    ######
 
-def completions(i, j, game_state: GameState, board):
+def completions(i, j, game_state: GameState):
     """
     Returns true if a move completes a row a column and a block.
 
@@ -478,29 +273,14 @@ def completions(i, j, game_state: GameState, board):
     @param j: Column coordinate of the move
     @param game_state: Current state of the game
     """
-    
-    complete_row = len(get_row(i, game_state, board)) == game_state.board.N - 1
-    complete_column = len(get_column(j, game_state, board)) == game_state.board.N - 1
-    complete_box = len(get_block(i, j, game_state, board)) == game_state.board.N - 1
+
+    complete_row = len(get_row(i, game_state)) == game_state.board.N - 1
+    complete_column = len(get_column(j, game_state)) == game_state.board.N - 1
+    complete_box = len(get_block(i, j, game_state)) == game_state.board.N - 1
 
     return complete_row, complete_column, complete_box
 
-def three_completions(i, j, game_state: GameState, board):
-    """
-    Returns true if a move completes a row a column and a block.
-
-    @param i: Row coordinate of the move
-    @param j: Column coordinate of the move
-    @param game_state: Current state of the game
-    """
-    complete_row, complete_column, complete_box = completions(i, j, game_state, board)
-
-    if complete_row and complete_column and complete_box:
-        return True
-    else:
-        return False
-
-def get_surrounding_values(i: int, j: int, game_state: GameState, board):
+def get_surrounding_values(i: int, j: int, game_state: GameState):
     """
     Retrieve which values are in the block, row and column of
     a given square.
@@ -517,23 +297,22 @@ def get_surrounding_values(i: int, j: int, game_state: GameState, board):
     values = set()
 
     # Get values in row
-    values.update(get_row(i, game_state, board))
-    
+    values.update(get_row(i, game_state))
     if len(values) == game_state.board.N:
         return values
 
     # Get values in column
-    values.update(get_column(j, game_state, board))
+    values.update(get_column(j, game_state))
     if len(values) == game_state.board.N:
         return values
 
     # Get values in block
-    values.update(get_block(i, j, game_state, board))
+    values.update(get_block(i, j, game_state))
 
     return values
 
 
-def get_column(j: int, game_state: GameState, board):
+def get_column(j: int, game_state: GameState):
     """Retrieve the values in a certain column with coordinate j
 
     Parameters:
@@ -543,18 +322,15 @@ def get_column(j: int, game_state: GameState, board):
     Returns:
         values: The values in the column
     """
-    # values = [
-        
-    #     game_state.board.get(z, j)
-    #     for z in range(game_state.board.N)
-    #     if game_state.board.get(z, j) != SudokuBoard.empty
-    # ]
-
-    values = board[:, j]
-    return np.flatten(values)
+    values = [
+        game_state.board.get(z, j)
+        for z in range(game_state.board.N)
+        if game_state.board.get(z, j) != SudokuBoard.empty
+    ]
+    return values
 
 
-def get_row(i: int, game_state: GameState, board):
+def get_row(i: int, game_state: GameState):
     """Retrieve the values in a certain row with coordinate i
 
     Parameters:
@@ -564,18 +340,15 @@ def get_row(i: int, game_state: GameState, board):
     Returns:
         values: The values in the column
     """
-    # values = [
-    #     game_state.board.get(i, z)
-    #     for z in range(game_state.board.N)
-    #     if game_state.board.get(i, z) != SudokuBoard.empty
-    # ]
-    values = board[i, :]
-    return values.flatten()
-
+    values = [
+        game_state.board.get(i, z)
+        for z in range(game_state.board.N)
+        if game_state.board.get(i, z) != SudokuBoard.empty
+    ]
     return values
 
 
-def get_block(i: int, j: int, game_state: GameState, board):
+def get_block(i: int, j: int, game_state: GameState):
     """Get all values in a block with coordinates (i, j)
 
     Parameters:
@@ -589,7 +362,10 @@ def get_block(i: int, j: int, game_state: GameState, board):
 
     i_start = int(i / game_state.board.m) * game_state.board.m
     j_start = int(j / game_state.board.n) * game_state.board.n
-    values = board[i_start: i_start + game_state.board.m, j_start : game_state.board.n]
-    return values.flatten()
-
+    values = [
+        game_state.board.get(x, y)
+        for x in range(i_start, i_start + game_state.board.m)
+        for y in range(j_start, j_start + game_state.board.n)
+        if game_state.board.get(x, y) != SudokuBoard.empty
+    ]
     return values
