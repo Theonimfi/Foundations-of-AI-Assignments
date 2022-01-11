@@ -10,7 +10,7 @@ import copy
 
 MAX_DEPTH = 50
 END_GAME = 21
-C = 4
+C = 3
 
 class MCST_Node():
     def __init__(self, all_moves, gameCopy, n_empty, eval=0, parent=None, move=None, move_score=0, depth=0):
