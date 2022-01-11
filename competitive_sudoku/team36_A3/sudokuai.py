@@ -3,14 +3,12 @@
 #  https://www.gnu.org/licenses/gpl-3.0.txt)
 
 import random
+import math
 
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard, TabooMove
 import competitive_sudoku.sudokuai
 
-
-MAX_DEPTH = 50
 END_GAME = 21
-
 
 class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
     """
@@ -150,13 +148,15 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 # print("played a random move")
 
             if firstRound:
-                evaluations.append((move, move_score))
-                if move_score > max_score:
-                    max_score = move_score
+                ucb1 = move_score + 2 * math.sqrt(math.log((start - 1)) / 1)
+                evaluations.append([move, move_score, 1])
+                if ucb1 > max_score:
+                    max_score = ucb1
                     best_move = move
             else:
-                if move_score > round_max_score:
-                    round_max_score = move_score
+                ucb1 = move_score + 2 * math.sqrt(math.log((start - 1)) / 1)
+                if ucb1 > round_max_score:
+                    round_max_score = ucb1
                     best_move = move
                     found_max_score = True
 
@@ -174,26 +174,33 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             # otherwise, find a move with the highest score and call again monte carlo function
 
             if found_max_score:
+                for array in evaluations:
+                    if array[0] == initial_move:
+                        array[2] = array[2] + 1
+                        break;
                 gameCopy = game_state
                 gameCopy.board.put(best_move.i, best_move.j, best_move.value)
                 updated_moves = update_moves(all_moves, best_move.i, best_move.j, best_move.value)
                 self.propose_move(initial_move)
                 self.monte_carlo(gameCopy, initial_game_state, updated_moves, max_score, False, evaluations, initial_move, iterations, start, round_max_score)
             else:
-                for index, item in enumerate(evaluations):
-                    itemlist = list(item)
-                    if itemlist[0] == initial_move:
-                        itemlist[1] = round_max_score
-                        item = tuple(itemlist)
-                        evaluations[index] = item
+                for array in evaluations:
+                    if array[0] == initial_move:
+                        array[1] = round_max_score
                         break;
-
                 new_max_score = round_max_score
                 new_best_move = initial_move
-                for move, score in evaluations:
-                    if score > new_max_score:
+                for array in evaluations:
+                    ucb1 = array[1] + 2 * math.sqrt(math.log((start - 1)) / array[2])
+                    if ucb1 > new_max_score:
                         new_max_score = score
                         new_best_move = move
+
+                for array in evaluations:
+                    if new_best_move != initial_move:
+                        if array[0] == new_best_move:
+                            array[2] = array[2] + 1
+                            break;
 
                 gameCopy = initial_game_state
                 gameCopy.board.put(new_best_move.i, new_best_move.j, new_best_move.value)
