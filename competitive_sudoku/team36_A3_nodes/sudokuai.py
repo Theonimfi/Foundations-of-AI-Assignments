@@ -10,7 +10,7 @@ import copy
 
 MAX_DEPTH = 50
 END_GAME = 21
-C = 3
+C = 3   
 
 class MCST_Node():
     def __init__(self, all_moves, gameCopy, n_empty, eval=0, parent=None, move=None, move_score=0, depth=0):
@@ -237,12 +237,12 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
             best_move = root.UCT(C=0).move
             # print()
-            if i % 1 == 0:
+            # if i % 1 == 0:
                 # print()
-                for c in root.children:
-                    print(f"{c.move} {c.results[1]/sum(c.results)}, {c.results}")
+                # for c in root.children:
+                #     print(f"{c.move} {c.results[1]/sum(c.results)}, {c.results}")
 
-                self.print_tree(root)
+                # self.print_tree(root)
             self.propose_move(best_move)
                     # # print()
     def possible(self, i, j, value, game_state):
