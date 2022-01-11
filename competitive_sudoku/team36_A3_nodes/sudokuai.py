@@ -10,7 +10,7 @@ import copy
 
 MAX_DEPTH = 50
 END_GAME = 21
-C = 0.2
+C = 2
 
 class MCST_Node():
     def __init__(self, all_moves, gameCopy, n_empty, eval=0, parent=None, move=None, move_score=0, depth=0):
@@ -66,7 +66,7 @@ class MCST_Node():
     
         gameCopy = copy.deepcopy(self.gameCopy)
         gameCopy.board.put(move.i, move.j, move.value)
-        print(f"exp {move}, e:{eval} >>> ", end="")
+        # print(f"exp {move}, e:{eval} >>> ", end="")
         # print(gameCopy.board.squares)
         # print(eval)
         child = MCST_Node(nextMoves, gameCopy, self.n_empty-1, parent=self, eval=eval, move=move, move_score=move_score, depth=self.depth+1)
@@ -83,7 +83,7 @@ class MCST_Node():
         # print(len(nextMoves))
         move_score = self.eval
         # print(move_score)
-
+        
         isplayer = ~self.isa3agent
         # print(f"ro1 {self.move} >>> ", end="")
 
@@ -93,13 +93,13 @@ class MCST_Node():
             next_random_move = random.choice(nextMoves)
             if isplayer:
                 # print(next_random_move, -score_move(next_random_move, board_copy))
-                print(f"ro {next_random_move}, e:{-score_move(next_random_move, board_copy)} >>> ", end="")
+                # print(f"ro {next_random_move}, e:{-score_move(next_random_move, board_copy)} >>> ", end="")
 
                 move_score = move_score - score_move(next_random_move, board_copy)
 
             else:
                 # print(next_random_move, score_move(next_random_move, board_copy))
-                print(f"ro {next_random_move}, e:{score_move(next_random_move, board_copy)} >>> ", end="")
+                # print(f"ro {next_random_move}, e:{score_move(next_random_move, board_copy)} >>> ", end="")
 
                 move_score = move_score + score_move(next_random_move, board_copy)
 
@@ -115,20 +115,33 @@ class MCST_Node():
         # print(board_copy.board.squares)
         # print("\n end")
         # print(move_score, len(empty_squares))
+
+        if len(empty_squares) == 0:
+            # print(f"1 score {move_score} {self.move}")
+
+            return move_score
+        else: 
+            # print(f"0 score {move_score} {self.move}")
+            return -20
+
         if move_score > 0 and len(empty_squares) == 0:
-            print(f"1 score {move_score} {self.move}")
+            # print(f"1 score {move_score} {self.move}")
 
             return 1
         else: 
-            print(f"0 score {move_score} {self.move}")
+            # print(f"0 score {move_score} {self.move}")
             return 0
-
 
 
     def backpropagate(self, result):
         self.n += 1
         self.v += result
-        self.results[result] += 1
+        # self.results[result] += 1
+
+        if result>0:
+            self.results[1] += 1
+        else:
+            self.results[0] += 1
 
         if self.parent:
             self.parent.backpropagate(result)
@@ -145,33 +158,33 @@ class MCST_Node():
         current_node = self
 
         while current_node.n_empty != 0:
-            print(f"{current_node.move} >>> ", end="")
+            # print(f"{current_node.move} >>> ", end="")
             # print(f"{current_node.gameCopy.board.squares} >>> ", end="")
 
             # print("test")
             if current_node.unmade_moves != []:
                 return current_node.expand()
             else:
-                # print(current_node.move, current_node.depth)
-                # print(len(current_node.children))
-
                 while current_node.children == []:
-                    parent_node = current_node.parent
-
-                    parent_node.children.remove(current_node)
-
-                    current_node = parent_node
+                        print('test')
+                        parent_node = current_node.parent
 
 
 
-            
+                        parent_node.children.remove(current_node)
+
+                        current_node = parent_node
+
+         
+
+                # print(current_node.move)
                 current_node = current_node.UCT()
 
             
             # if current_node.depth == 1:
             #     print(current_node.move)
-        # print()
-        return current_node
+        print()
+        return None
 
     # def game_over(self):
 
@@ -239,28 +252,26 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
         root = MCST_Node( all_moves, gameCopy, len(empty_squares), depth=0)
 
-        # while root.unmade_moves:
-        #     root.expand()
 
-        # print(root.all_moves)
-        for i in range(25):
+        for i in range(1000):
             # print(i)
 
             nextMove = root.select_best_child()
+
+            if nextMove == None:
+                print(i)
+                print("bye")
+                break
             # print(nextMove.depth, nextMove.move)
             
             result = nextMove.roll_out()
             # print(result)
             # print(nextMove.depth)
             nextMove.backpropagate(result)
-            print()
+            # print()
             # self.print_tree(root)
             best_move = root.UCT(C=0).move
-            eval = root.UCT().results
-            # print(
-            #     f"Iteration: {i}, Best move: {best_move}, score: {score_move(best_move, game_state)}, {eval}"
-            # )
-            # print()
+ 
             if i % 10 == 0:
                 print()
                 for c in root.children:
