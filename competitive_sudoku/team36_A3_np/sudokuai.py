@@ -28,6 +28,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
         N = game_state.board.N
 
+        self.board = np.reshape(game_state.board.squares, (N,N) )
 
         # Find all legal and non taboo moves
         all_moves = [Move(i, j, value) for i in range(N) for j in range(N) 
@@ -40,7 +41,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         self.propose_move(move)
 
 
-        self.board = np.reshape(game_state.board.squares, (N,N) )
 
         # Initial ordering based on if three completions can be made
         moves = []
