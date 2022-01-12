@@ -135,8 +135,6 @@ class MCST_Node():
             self.parent.backpropagate(result)
 
     def UCT(self, C=2):
-        # # print(C)
-
         
         moves_UCB = [(c.v / c.n) + C * np.sqrt((2 * np.log(self.n) / c.n)) if c.n > 0 else float("inf") for c in self.children]
         # # print(moves_UCB)
@@ -218,13 +216,13 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         gameCopy = game_state
 
         N = game_state.board.N
-        empty_squares = [(i, j) for i in range(N) for j in range(N) if gameCopy.board.get(i,j) == SudokuBoard.empty]
+        empty_squares = set([(i, j) for i in range(N) for j in range(N) if gameCopy.board.get(i,j) == SudokuBoard.empty])
 
         root = MCST_Node( all_moves, gameCopy, len(empty_squares), depth=0)
 
 
         for i in range(109000):
-            print(i)
+            # print(i)
 
             nextMove = root.select_best_child()
 
@@ -237,10 +235,10 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
             best_move = root.UCT(C=0).move
             # print()
-            if i % 1 == 0:
+            if i % 4 == 0:
                 print()
                 for c in root.children:
-                    print(f"{c.move} {c.results[1]/sum(c.results)}, {c.results}")
+                    print(f"{c.move} {c.results[1]/sum(c.results)}, {c.results}, {c.v/c.n}")
 
                 self.print_tree(root)
             self.propose_move(best_move)
