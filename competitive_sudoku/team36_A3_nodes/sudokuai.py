@@ -218,7 +218,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         gameCopy = game_state
 
         N = game_state.board.N
-        empty_squares = set([(i, j) for i in range(N) for j in range(N) if gameCopy.board.get(i,j) == SudokuBoard.empty])
+        empty_squares = [(i, j) for i in range(N) for j in range(N) if gameCopy.board.get(i,j) == SudokuBoard.empty]
 
         root = MCST_Node( all_moves, gameCopy, len(empty_squares), depth=0)
 
@@ -237,12 +237,12 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
             best_move = root.UCT(C=0).move
             # print()
-            # if i % 1 == 0:
-                # print()
-                # for c in root.children:
-                #     print(f"{c.move} {c.results[1]/sum(c.results)}, {c.results}")
+            if i % 1 == 0:
+                print()
+                for c in root.children:
+                    print(f"{c.move} {c.results[1]/sum(c.results)}, {c.results}")
 
-                # self.print_tree(root)
+                self.print_tree(root)
             self.propose_move(best_move)
                     # # print()
     def possible(self, i, j, value, game_state):
