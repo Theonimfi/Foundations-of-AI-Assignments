@@ -9,11 +9,13 @@ from competitive_sudoku.sudoku import GameState, Move, SudokuBoard, TabooMove
 import competitive_sudoku.sudokuai
 import copy
 
-MAX_DEPTH = 50
-END_GAME = 21
 C = 3
 
 class MCST_Node():
+    """
+    Generates the Monte Carlo Tree Search to find an optimal move.
+    """
+
     def __init__(self, all_moves, gameCopy, n_empty, eval=0, parent=None, move=None, move_score=0, depth=0):
         super().__init__()
         self.move=move
@@ -43,6 +45,9 @@ class MCST_Node():
             self.isa3agent = True
 
     def expand(self):
+        """
+        The agent expands the initial node by finding the children of the node.
+        """
         move = self.unmade_moves.pop()
         
         move_score = score_move(move, self.gameCopy)
@@ -58,7 +63,6 @@ class MCST_Node():
     
         gameCopy = copy.deepcopy(self.gameCopy)
         gameCopy.board.put(move.i, move.j, move.value)
-        # print(f"exp {move}, e:{move_score} >>> ", end="")
     
         child = MCST_Node(nextMoves, gameCopy, self.n_empty-1, parent=self, eval=eval, move=move, move_score=move_score, depth=self.depth+1)
 
@@ -67,27 +71,23 @@ class MCST_Node():
         return child
     
     def roll_out(self):
+        """
+        The agent simulates the game. A random move from the expansion is chosen and the game from this
+        move is randomly completed.
+        """
+
         nextMoves = self.all_moves
-
         move_score = self.eval
-        # # print(move_score)
         isplayer = not self.isa3agent
-
-        # # print(f"ro1 {self.move} >>> ", end="")
-
         board_copy = copy.deepcopy(self.gameCopy)
 
         while nextMoves:
             next_random_move = random.choice(nextMoves)
             if isplayer:
-                # # print(f"test  {isplayer}", end="")
-                # # print(next_random_move, -score_move(next_random_move, board_copy))
-                # print(f"ro {next_random_move}, e:{-score_move(next_random_move, board_copy)} >>> ", end="")
 
                 move_score = move_score - score_move(next_random_move, board_copy)
 
             else:
-                # print(f"ro {next_random_move}, e:{score_move(next_random_move, board_copy)} >>> ", end="")
 
                 move_score = move_score + score_move(next_random_move, board_copy)
 
@@ -95,35 +95,23 @@ class MCST_Node():
 
             board_copy.board.put(next_random_move.i, next_random_move.j, next_random_move.value)
             nextMoves = update_moves(nextMoves, next_random_move.i, next_random_move.j, next_random_move.value)
-        
 
-        ## TODO score taboo moves (no NextMoves, not completed) really low
         empty_squares = set([(i, j) for i in range(self.gameCopy.board.N) for j in range(self.gameCopy.board.N) if board_copy.board.get(i,j) == SudokuBoard.empty])
 
-        # print(move_score, len(empty_squares))
-
         if len(empty_squares) == 0:
-            # # print(f"1 score {move_score} {self.move}")
-            # print("yas\n ")
             return move_score
-        else: 
-            # # print(f"0 score {move_score} {self.move}")
+        else:
             return -.1
 
-        # if move_score > 0 and len(empty_squares) == 0:
-        #     # # print(f"1 score {move_score} {self.move}")
-        #
-        #     return 1
-        # else:
-        #     # # print(f"0 score {move_score} {self.move}")
-        #     return 0
-
-
     def backpropagate(self, result):
+        """
+        The agent backtracks the nodes that it chose to reach the expanded node and updates the UCT values.
+
+        @param result: .
+        """
         self.n += 1
         self.v += result
-        # self.results[result] += 1
-        # # print(result, self.move, self.depth)
+
         if  result == -.1:
             self.results[2] += 1
         elif result>0:
@@ -135,22 +123,20 @@ class MCST_Node():
             self.parent.backpropagate(result)
 
     def UCT(self, C=2):
-        # print(C)
+
         moves_UCB = [(c.v / c.n) + C * np.sqrt((2 * np.log(self.n) / c.n)) if c.n > 0 else float("inf") for c in self.children]
-        # # print(moves_UCB)
+
         return self.children[np.argmax(moves_UCB)]
 
     def select_best_child(self):
         current_node = self
 
         while current_node.n_empty != 0:
-            # print(f"{current_node.move} >>> ", end="")
 
             if current_node.unmade_moves != []:
                 return current_node.expand()
             else:
                 while current_node.children == []:
-                    # print("spice")
                     parent_node = current_node.parent
                     parent_node.children.remove(current_node)
 
@@ -192,31 +178,22 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         # Call monte_carlo function with 900 number of iterations, to find the best move.
         # self.monte_carlo(game_state, game_state, all_moves, float("-inf"), True, [], all_moves[0], 900, 1, 0)
         self.mon_car(game_state, game_state, all_moves)
-        print(C)
     
 
     def write_tree(self, root):
         valid_runs = [1 if sum(c.results[:2]) >= 1 else 0 for c in root.children]
-        # valid_runs1 = [c.results for c in root.children]
 
-        print(sum(valid_runs), len(root.all_moves))
         per = 100*sum(valid_runs)/len(root.all_moves)
         perbet = 100*sum(root.results[:2])/root.n
-        # # print(per)
-        # with open('experimentsv3.0/2x2e.txt', 'a') as f:
-        #     f.write(f",{per}")
-
 
     def print_tree(self, root):
         current_nodes = [root]
-        # print(root.depth, root.results, root.n)
+
         while current_nodes != []:
             for node in current_nodes:
                 new_current = []
                 
                 for c in node.children:
-                    # print(c.depth*"  ", end='')
-                    # print(c.depth, c.move, c.results, c.n, c.v)
                     new_current.append(c)
 
                 current_nodes = new_current
@@ -234,12 +211,8 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         empty_squares = set([(i, j) for i in range(N) for j in range(N) if gameCopy.board.get(i, j) == SudokuBoard.empty])
 
         root = MCST_Node( all_moves, gameCopy, len(empty_squares), depth=0)
-        #
-        # with open('experimentsv3.0/2x2e.txt', 'a') as f:
-        #     # f.write(f"\n{len(empty_squares)}")
 
         for i in range(109000):
-            # print(i)
 
             nextMove = root.select_best_child()
 
@@ -251,17 +224,8 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             nextMove.backpropagate(result)
 
             best_move = root.UCT(C=0).move
-            # # print()
-            # if i % 10 == 0:
-            #     print()
-            #     for c in root.children:
-            #         print(f"{c.move} {c.results[1]/sum(c.results)}, {c.results}, {c.v/c.n}")
-
-            #     self.print_tree(root)
             self.propose_move(best_move)
-            
-            # self.write_tree(root)
-                    # # print()
+
     def possible(self, i, j, value, game_state):
         """
         Checks if a move is possible to make by looking
@@ -292,142 +256,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         values = get_surrounding_values(i, j, game_state)
 
         return [value for value in range(1, N + 1) if value not in values]
-
-
-
-    def monte_carlo(
-        self,
-        game_state: GameState,
-        initial_game_state: GameState,
-        all_moves,
-        max_score,
-        firstRound,
-        evaluations,
-        initial_move,
-        iterations,
-        start,
-        move_score
-    ):
-        """
-        The monte_carlo function searches for the best move by simulating the game. For every possible move, it completes
-        the game randomly and it calculates the score. Then it keeps the move with the best score. If this move turns out to
-        be worst move than others in another game simulation, then it goes back and it gets another better move.
-
-        @param game_state: Current Game state.
-        @param initial_game_state: Initial Game state.
-        @param all_moves: List of all moves that needs investigation.
-        @param max_score: The max score.
-        @param firstRound: True if it's agent's first turn False if its the game simulation.
-        @param evaluations: Includes tuples with each moves and their scores.
-        @param initial_move: The move that the agent chose.
-        @param iterations: The number of game simulations.
-        @param start: Indicates which turn is it.
-        @param move_score: Keeps track of the score.
-        """
-
-        # If there are no more iterations or moves return
-        if iterations == 0 or len(all_moves) == 0:
-            return
-
-        # Reduce number of iterations
-        iterations = iterations - 1
-        # print(iterations)
-
-        # If no max score is found then found_max_score remains False
-        found_max_score = False
-
-        # The round's max score
-        round_max_score = float("-inf")
-
-        # If start mod 2 is zero then the current agent is not our a3 agent
-        if start % 2 == 0:
-            isa3agent = False
-        else:
-            isa3agent = True
-
-        # Increase start value
-        start = start + 1
-
-        # For every possible move, complete the game randomly and calculate the score of every game. If the
-        # game is the first round then save all scores and moves in the evaluations list and save also the best move
-        # with thw highest score. If the game is not the first round then save the highest score of this round
-        for move in all_moves:
-            move_score = 0
-            gameCopy = game_state
-            if isa3agent:
-                move_score = move_score + score_move(move,gameCopy)
-                isotheragent = True
-            else:
-                move_score = move_score - score_move(move, gameCopy)
-                isotheragent = False
-            gameCopy.board.put(move.i, move.j, move.value)
-            nextMoves = update_moves(all_moves, move.i, move.j, move.value)
-            
-            while nextMoves:
-                next_random_move = random.choice(nextMoves)
-                if isotheragent:
-                    move_score = move_score - score_move(next_random_move, gameCopy)
-                    isotheragent = False
-                else:
-                    move_score = move_score + score_move(next_random_move, gameCopy)
-                    isotheragent = True
-                gameCopy.board.put(next_random_move.i, next_random_move.j, next_random_move.value)
-                nextMoves = update_moves(nextMoves, next_random_move.i, next_random_move.j, next_random_move.value)
-                # # print("played a random move")
-
-            if firstRound:
-                evaluations.append((move, move_score))
-                if move_score > max_score:
-                    max_score = move_score
-                    best_move = move
-                    found_max_score = True
-            else:
-                if move_score > round_max_score:
-                    round_max_score = move_score
-
-        # If it's the first round propose the best move and call again the monte carlo function for another
-        # game simulation
-        if firstRound:
-            gameCopy = game_state
-            initial_move = best_move
-            gameCopy.board.put(best_move.i, best_move.j, best_move.value)
-            updated_moves = update_moves(all_moves, best_move.i, best_move.j, best_move.value)
-            self.propose_move(best_move)
-            self.monte_carlo(gameCopy, game_state, updated_moves, max_score, False, evaluations, initial_move,
-                             iterations, start, max_score)
-        else:
-            # If it's not the first round propose then if there is a max score then call again the monte carlo function
-            # otherwise, find a move with the highest score and call again monte carlo function
-
-            if found_max_score:
-                gameCopy = game_state
-                gameCopy.board.put(best_move.i, best_move.j, best_move.value)
-                updated_moves = update_moves(all_moves, best_move.i, best_move.j, best_move.value)
-                self.propose_move(initial_move)
-                self.monte_carlo(gameCopy, initial_game_state, updated_moves, max_score, False, evaluations, initial_move, iterations, start, round_max_score)
-            else:
-                for index, item in enumerate(evaluations):
-                    itemlist = list(item)
-                    if itemlist[0] == initial_move:
-                        itemlist[1] = round_max_score
-                        item = tuple(itemlist)
-                        evaluations[index] = item
-                        break;
-
-                new_max_score = round_max_score
-                new_best_move = initial_move
-                for move, score in evaluations:
-                    if score > new_max_score:
-                        new_max_score = score
-                        new_best_move = move
-
-                gameCopy = initial_game_state
-                gameCopy.board.put(new_best_move.i, new_best_move.j, new_best_move.value)
-                updated_moves = update_moves(all_moves, new_best_move.i, new_best_move.j, new_best_move.value)
-
-                # Propose the new best move that the agent founds
-                self.propose_move(new_best_move)
-                self.monte_carlo(gameCopy, initial_game_state, updated_moves, max_score, False, evaluations, new_best_move, iterations, 1, new_max_score)
 
 ######                                    ######
 #       INFORMATION ON THE MOVES               #
