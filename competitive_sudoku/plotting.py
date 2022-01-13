@@ -26,14 +26,14 @@ a3_mc_a3_mm_2x2easy = pd.DataFrame({
     'Win': [0, 0, 0, 0],
     'Board': '2x2 easy',
     'Versus': 'A3_numpy_minmax'
-}) # done
+})  # done
 
 a3_mc_a3_mm_2x2empty = pd.DataFrame({
     'Time': [0.5, 1, 3],
     'Win': [0, 0, 0],
     'Board': '2x2 easy',
     'Versus': 'A3_numpy_minmax'
-}) # done
+})  # done
 
 
 a3_mc_a3_mm_c = pd.DataFrame({
@@ -45,22 +45,22 @@ a3_mc_a3_mm_c = pd.DataFrame({
 })  # done
 
 greedy2x2empty = pd.DataFrame({
-    'Time': [0.1, 0.5, 1, 3],
-    'Win': [50, 70, 100, 90],
-    'Board': '2x2 easy',
+    'Time': [0.5, 1, 3],
+    'Win': [100, 100, -],
+    'Board': '2x2 empty',
     'Versus': 'Greedy player'
 })  # tbd
 
 greedy3x3hard = pd.DataFrame({
-    'Time': [0.1, 0.5, 1, 3],
-    'Win': [50, 90, 100, 100],
-    'Board': '3x3 easy',
+    'Time': [0.5, 1, 3],
+    'Win': [-, -, -],
+    'Board': '3x3 hard',
     'Versus': 'Greedy player'
 })  # tbd
 
 greedy4x4random = pd.DataFrame({
-    'Time': [0.1, 0.5, 1, 3],
-    'Win': [50, 34, 100, 100],
+    'Time': [0.5, 1, 3],
+    'Win': [-, -, -],
     'Board': '4x4 random',
     'Versus': 'Greedy player'
 })

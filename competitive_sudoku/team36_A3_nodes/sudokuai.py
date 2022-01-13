@@ -110,13 +110,13 @@ class MCST_Node():
             # # print(f"0 score {move_score} {self.move}")
             return -.1
 
-        if move_score > 0 and len(empty_squares) == 0:
-            # # print(f"1 score {move_score} {self.move}")
-
-            return 1
-        else: 
-            # # print(f"0 score {move_score} {self.move}")
-            return 0
+        # if move_score > 0 and len(empty_squares) == 0:
+        #     # # print(f"1 score {move_score} {self.move}")
+        #
+        #     return 1
+        # else:
+        #     # # print(f"0 score {move_score} {self.move}")
+        #     return 0
 
 
     def backpropagate(self, result):
@@ -231,12 +231,12 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         gameCopy = game_state
 
         N = game_state.board.N
-        empty_squares = set([(i, j) for i in range(N) for j in range(N) if gameCopy.board.get(i,j) == SudokuBoard.empty])
+        empty_squares = set([(i, j) for i in range(N) for j in range(N) if gameCopy.board.get(i, j) == SudokuBoard.empty])
 
         root = MCST_Node( all_moves, gameCopy, len(empty_squares), depth=0)
-
-        with open('experimentsv3.0/2x2e.txt', 'a') as f:
-            # f.write(f"\n{len(empty_squares)}")
+        #
+        # with open('experimentsv3.0/2x2e.txt', 'a') as f:
+        #     # f.write(f"\n{len(empty_squares)}")
 
         for i in range(109000):
             # print(i)
