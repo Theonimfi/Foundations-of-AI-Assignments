@@ -7,27 +7,42 @@ time = [0.1, 0.5, 1, 5]
 
 plt.rcParams.update({'font.size': 15})
 
-greedy3x3empty = pd.DataFrame({
-    'Time': [0.1, 0.5, 1, 5],
-    'Win': [50, 90, 100, 100],
+a3_mc_a3_mm_3x3empty = pd.DataFrame({
+    'Time': [0.5, 1, 3],
+    'Win': [0, 10, 0],
     'Board': '3x3 empty',
-    'Versus': 'Greedy player'
+    'Versus': 'A3_numpy_minmax'
 })  # done
 
-greedy3x3random = pd.DataFrame({
-    'Time': [0.1, 0.5, 1, 5],
-    'Win': [50, 100, 100, 100],
-    'Board': '3x3 random',
-    'Versus': 'Greedy player'
-})  # done
-
-
-greedy3x3hard = pd.DataFrame({
-    'Time': [0.1, 0.5, 1, 5],
-    'Win': [50, 100, 100, 100],
+a3_mc_a3_mm_3x3hard = pd.DataFrame({
+    'Time': [0.5, 1, 3],
+    'Win': [0, 0, 0],
     'Board': '3x3 hard',
-    'Versus': 'Greedy player'
-})
+    'Versus': 'A3_numpy_minmax'
+})  # done
+
+a3_mc_a3_mm_2x2easy = pd.DataFrame({
+    'Time': [0.5, 1, 3],
+    'Win': [0, 0, 0, 0],
+    'Board': '2x2 easy',
+    'Versus': 'A3_numpy_minmax'
+}) # done
+
+a3_mc_a3_mm_2x2empty = pd.DataFrame({
+    'Time': [0.5, 1, 3],
+    'Win': [0, 0, 0],
+    'Board': '2x2 easy',
+    'Versus': 'A3_numpy_minmax'
+}) # done
+
+
+a3_mc_a3_mm_c = pd.DataFrame({
+    'C': [0.25, 0.5, 1, 2, 3, 4, 5, 10, 50, 100],
+    'Win': [0, 10, 10, 10, 0, 0, 0, 0, 10, 0],
+    'Time': '1s',
+    'Board': '3x3 hard',
+    'Versus': 'A3_numpy_minmax'
+})  # done
 
 greedy2x2easy = pd.DataFrame({
     'Time': [0.1, 0.5, 1, 5],
@@ -52,7 +67,7 @@ greedy2x3random = pd.DataFrame({
 
 greedy3x4random = pd.DataFrame({
     'Time': [0.1, 0.5, 1, 5],
-    'Win': [50, 90, 100, 100],
+    'Win': [50, 34, 100, 100],
     'Board': '3x4 random',
     'Versus': 'Greedy player'
 })

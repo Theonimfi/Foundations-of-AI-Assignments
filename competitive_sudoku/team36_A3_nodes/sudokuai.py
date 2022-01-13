@@ -36,7 +36,6 @@ class MCST_Node():
 
         self.n_empty = n_empty
 
-
     # If start mod 2 is zero then the current agent is not our a3 agent
         if depth % 2 != 0:
             self.isa3agent = False
@@ -49,14 +48,12 @@ class MCST_Node():
         move_score = score_move(move, self.gameCopy)
 
         if self.isa3agent:
-
             eval = self.eval+move_score
 
         else:
 
             eval = self.eval-move_score
 
-      
         nextMoves = update_moves(self.all_moves, move.i, move.j, move.value)
     
         gameCopy = copy.deepcopy(self.gameCopy)
@@ -94,7 +91,7 @@ class MCST_Node():
 
                 move_score = move_score + score_move(next_random_move, board_copy)
 
-            isplayer =  not isplayer
+            isplayer = not isplayer
 
             board_copy.board.put(next_random_move.i, next_random_move.j, next_random_move.value)
             nextMoves = update_moves(nextMoves, next_random_move.i, next_random_move.j, next_random_move.value)
@@ -195,6 +192,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         # Call monte_carlo function with 900 number of iterations, to find the best move.
         # self.monte_carlo(game_state, game_state, all_moves, float("-inf"), True, [], all_moves[0], 900, 1, 0)
         self.mon_car(game_state, game_state, all_moves)
+        print(C)
     
 
     def write_tree(self, root):
@@ -261,7 +259,8 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
             #     self.print_tree(root)
             self.propose_move(best_move)
-            self.write_tree(root)
+            
+            # self.write_tree(root)
                     # # print()
     def possible(self, i, j, value, game_state):
         """
@@ -394,7 +393,8 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             gameCopy.board.put(best_move.i, best_move.j, best_move.value)
             updated_moves = update_moves(all_moves, best_move.i, best_move.j, best_move.value)
             self.propose_move(best_move)
-            self.monte_carlo(gameCopy, game_state, updated_moves,max_score,False,evaluations, initial_move , iterations, start, max_score)
+            self.monte_carlo(gameCopy, game_state, updated_moves, max_score, False, evaluations, initial_move,
+                             iterations, start, max_score)
         else:
             # If it's not the first round propose then if there is a max score then call again the monte carlo function
             # otherwise, find a move with the highest score and call again monte carlo function
@@ -432,6 +432,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 ######                                    ######
 #       INFORMATION ON THE MOVES               #
 ######                                    ######
+
 
 def update_moves(all_moves: list, current_i: int, current_j: int, current_value):
     """
