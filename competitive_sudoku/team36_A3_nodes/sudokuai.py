@@ -13,7 +13,18 @@ C = 3
 
 class MCST_Node():
     """
-    Generates the Monte Carlo Tree Search to find an optimal move.
+        The monte_carlo function searches for the best move by simulating the game. For every game state, it selects
+        a move, its expands it, it simulates the game by choosing random moves to complete it and then it calculates
+        the UCT. Finally, it backpropagates the game by updated the UCT value in every visited node.
+
+        @param gameCopy: Deepcopy of the game state.
+        @param n_empty: Number of empty cells.
+        @param all_moves: List of all moves that needs investigation.
+        @param eval: The total score of a game.
+        @param parent: The parent node.
+        @param move: A move of type Move.
+        @param move_score: The score of a move.
+        @param depth: The depth. Indcated the current agent.
     """
 
     def __init__(self, all_moves, gameCopy, n_empty, eval=0, parent=None, move=None, move_score=0, depth=0):
@@ -107,7 +118,7 @@ class MCST_Node():
         """
         The agent backtracks the nodes that it chose to reach the expanded node and updates the UCT values.
 
-        @param result: .
+        @param result: the results of the rollout.
         """
         self.n += 1
         self.v += result
@@ -123,12 +134,21 @@ class MCST_Node():
             self.parent.backpropagate(result)
 
     def UCT(self, C=2):
+        """
+        Calculates the UCT formula.
+
+        """
 
         moves_UCB = [(c.v / c.n) + C * np.sqrt((2 * np.log(self.n) / c.n)) if c.n > 0 else float("inf") for c in self.children]
 
         return self.children[np.argmax(moves_UCB)]
 
     def select_best_child(self):
+        """
+        Finds the best child of a parent node.
+
+        """
+
         current_node = self
 
         while current_node.n_empty != 0:
@@ -202,9 +222,15 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
     def mon_car(
         self,
         game_state: GameState,
-        initial_game_state: GameState,
         all_moves,
     ):
+        """
+            This is the monte carlo function that repeats the monte carlo steps 109000 times if there is time left.
+
+            @param gameCopy: The state of the game.
+            @param all_moves: List of all moves that needs investigation.
+        """
+
         gameCopy = game_state
 
         N = game_state.board.N
