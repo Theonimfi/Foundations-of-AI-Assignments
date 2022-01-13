@@ -235,7 +235,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
         root = MCST_Node( all_moves, gameCopy, len(empty_squares), depth=0)
 
-        with open('experimentsv3.0/2x2e.txt', 'a') as f:
+        # with open('experimentsv3.0/2x2e.txt', 'a') as f:
             # f.write(f"\n{len(empty_squares)}")
 
         for i in range(109000):
@@ -259,7 +259,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
             #     self.print_tree(root)
             self.propose_move(best_move)
-            
+
             # self.write_tree(root)
                     # # print()
     def possible(self, i, j, value, game_state):
