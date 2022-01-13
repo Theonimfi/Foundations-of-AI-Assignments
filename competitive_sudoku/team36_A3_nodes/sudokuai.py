@@ -3,6 +3,7 @@
 #  https://www.gnu.org/licenses/gpl-3.0.txt)
 
 import random
+import sys
 import numpy as np
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard, TabooMove
 import competitive_sudoku.sudokuai
@@ -10,7 +11,7 @@ import copy
 
 MAX_DEPTH = 50
 END_GAME = 21
-C = 3   
+C = 3
 
 class MCST_Node():
     def __init__(self, all_moves, gameCopy, n_empty, eval=0, parent=None, move=None, move_score=0, depth=0):
@@ -31,7 +32,7 @@ class MCST_Node():
 
         self.gameCopy = gameCopy
 
-        self.results = [0, 0]
+        self.results = [0, 0, 0]
 
         self.n_empty = n_empty
 
@@ -106,11 +107,11 @@ class MCST_Node():
 
         if len(empty_squares) == 0:
             # # print(f"1 score {move_score} {self.move}")
-
+            # print("yas\n ")
             return move_score
         else: 
             # # print(f"0 score {move_score} {self.move}")
-            return 0
+            return -.1
 
         if move_score > 0 and len(empty_squares) == 0:
             # # print(f"1 score {move_score} {self.move}")
@@ -126,7 +127,9 @@ class MCST_Node():
         self.v += result
         # self.results[result] += 1
         # # print(result, self.move, self.depth)
-        if result>0:
+        if  result == -.1:
+            self.results[2] += 1
+        elif result>0:
             self.results[1] += 1
         else:
             self.results[0] += 1
@@ -135,7 +138,7 @@ class MCST_Node():
             self.parent.backpropagate(result)
 
     def UCT(self, C=2):
-        
+        # print(C)
         moves_UCB = [(c.v / c.n) + C * np.sqrt((2 * np.log(self.n) / c.n)) if c.n > 0 else float("inf") for c in self.children]
         # # print(moves_UCB)
         return self.children[np.argmax(moves_UCB)]
@@ -175,6 +178,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         self.last_moves = []
 
         self.taboo_moves = []
+        self.player = 0
 
     def compute_best_move(self, game_state: GameState) -> None:
 
@@ -192,6 +196,19 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         # self.monte_carlo(game_state, game_state, all_moves, float("-inf"), True, [], all_moves[0], 900, 1, 0)
         self.mon_car(game_state, game_state, all_moves)
     
+
+    def write_tree(self, root):
+        valid_runs = [1 if sum(c.results[:2]) >= 1 else 0 for c in root.children]
+        # valid_runs1 = [c.results for c in root.children]
+
+        print(sum(valid_runs), len(root.all_moves))
+        per = 100*sum(valid_runs)/len(root.all_moves)
+        perbet = 100*sum(root.results[:2])/root.n
+        # # print(per)
+        # with open('experimentsv3.0/2x2e.txt', 'a') as f:
+        #     f.write(f",{per}")
+
+
     def print_tree(self, root):
         current_nodes = [root]
         # print(root.depth, root.results, root.n)
@@ -220,6 +237,8 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
         root = MCST_Node( all_moves, gameCopy, len(empty_squares), depth=0)
 
+        with open('experimentsv3.0/2x2e.txt', 'a') as f:
+            # f.write(f"\n{len(empty_squares)}")
 
         for i in range(109000):
             # print(i)
@@ -234,14 +253,15 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             nextMove.backpropagate(result)
 
             best_move = root.UCT(C=0).move
-            # print()
-            if i % 4 == 0:
-                print()
-                for c in root.children:
-                    print(f"{c.move} {c.results[1]/sum(c.results)}, {c.results}, {c.v/c.n}")
+            # # print()
+            # if i % 10 == 0:
+            #     print()
+            #     for c in root.children:
+            #         print(f"{c.move} {c.results[1]/sum(c.results)}, {c.results}, {c.v/c.n}")
 
-                self.print_tree(root)
+            #     self.print_tree(root)
             self.propose_move(best_move)
+            self.write_tree(root)
                     # # print()
     def possible(self, i, j, value, game_state):
         """
