@@ -7,7 +7,6 @@ import numpy as np
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard, TabooMove
 import competitive_sudoku.sudokuai
 
-import datetime
 MAX_DEPTH = 50
 END_GAME = 21
 
@@ -57,7 +56,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         for i in range(1, MAX_DEPTH):
             if i > len(empty_squares):
                 break
-            start = datetime.datetime.now()
+
             # Calculate taboo moves if you are in the end game
             if len(empty_squares) < END_GAME and i > 2:
                 taboo = True
@@ -67,11 +66,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             best_move, eval = self.minimax(game_state, i, float("-inf"), float("inf"), True, 0, empty_squares, moves, True, taboo)
             
             self.propose_move(best_move)
-
-            print(
-                f"3 Taboo: {len(self.taboo_moves)} Depth: {i}, Best move: {best_move}, score: {score_move(best_move, game_state, self.board)}, {eval}, empty: {len(empty_squares)}"
-            )
-            print(datetime.datetime.now()-start)
 
             # Determine if taboo move should be made and propose it.
             if self.taboo_moves:
@@ -161,15 +155,8 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             # Add the lowest possible value in max_eval
             max_eval = float("-inf")
 
-            all_moves1 = all_moves
 
-            # if initial:
-            #     print(int(len(all_moves)*0.75))
-            #     all_moves1 = all_moves[:int(len(all_moves)*0.75)]
-            # print(self.board)
-
-            for move in all_moves1:
-                start1 = datetime.datetime.now()
+            for move in all_moves:
 
                 # Get the score of the move by calling the score_move function
                 move_score = score_move(move, game_state, self.board)
@@ -197,21 +184,8 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 current_score += move_score
 
                 # Add the move on the board
-                # start = datetime.datetime.now()
-                # print()
-                # print(self.board)
-                # print(move.i, move.j)
+
                 self.board[move.i, move.j] = move.value
-                # print(self.board)
-
-                # print((datetime.datetime.now()-start)*100)
-                # start = datetime.datetime.now()
-
-                # game_state.board.put(move.i, move.j, move.value)
-                
-                # print((datetime.datetime.now()-start1))
-                # print((datetime.datetime.now()-start)*100)
-                # print()
 
                 # Call the minimax function. Decrease the depth and indicate that since this player is the Max the other
                 # player should be the Min (False). Save the result in the current_eval attribute.
